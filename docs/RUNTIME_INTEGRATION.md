@@ -37,3 +37,26 @@ path from this document alone and do not overwrite an existing review layer with
 
 A successful source build or repository merge is not proof of installation. Installation requires readback from the actual
 runtime target and an exercised review path.
+
+## Executable bounded loop
+
+`cricket.runtime.ReviewRuntime` provides the reference host loop.
+
+- The host generator produces the initial candidate.
+- Cricket reviews it.
+- PASS returns immediately.
+- BLOCK returns immediately; no automatic rewrite is attempted.
+- CHALLENGE may trigger exactly one generator revision using Cricket's rendered feedback.
+- The revised candidate is reviewed once more and returned even if it remains CHALLENGE or becomes BLOCK.
+
+This is intentionally bounded. Cricket is a reviewer, not a recursive deliberation engine.
+
+## Principle packs
+
+`PrinciplePack` loads a versioned JSON principle set and appends those principles to request-local principles without overwriting them. The pack ID/version are preserved in request metadata for provenance.
+
+## Review receipts
+
+`JsonlReceiptLedger` provides a single-writer append-only receipt surface. Each receipt includes the previous receipt digest and its own SHA-256 digest over canonical JSON. Appends fail closed if the existing chain does not verify.
+
+This is tamper-evidence, not distributed consensus, timestamp notarization, or proof that the reviewed external effect occurred.
