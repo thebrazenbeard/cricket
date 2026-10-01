@@ -240,3 +240,24 @@ def test_runtime_receipt_binds_initial_and_final_candidates(tmp_path: Path) -> N
     assert outcome.receipt is not None
     assert outcome.receipt["initial_candidate_digest"] == canonical_digest("Done.")
     assert outcome.receipt["final_candidate_digest"] == canonical_digest("Revised answer.")
+
+
+def test_runtime_receipt_binds_applied_principle_pack_and_review_envelopes(tmp_path: Path) -> None:
+    pack = PrinciplePack(
+        id="test-pack",
+        version="1",
+        principles=("Track the actual proposition.",),
+    )
+    ledger = JsonlReceiptLedger(tmp_path / "receipts.jsonl")
+    generator = SequenceGenerator(["clean"])
+    runtime = ReviewRuntime(
+        cricket=Cricket(),
+        generator=generator,
+        principle_pack=pack,
+        receipt_ledger=ledger,
+    )
+    outcome = runtime.run(user_message="u")
+    assert outcome.receipt is not None
+    assert outcome.receipt["principle_pack"] == {"id": "test-pack", "version": "1"}
+    assert len(outcome.receipt["initial_request_digest"]) == 64
+    assert outcome.receipt["final_request_digest"] == outcome.receipt["initial_request_digest"]
