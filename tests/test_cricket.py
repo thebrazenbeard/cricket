@@ -259,3 +259,23 @@ def test_chat_turn_block_suppresses_candidate_and_surfaces_only_cricket() -> Non
     rendered = render_chat_turn("Publishing now.", result)
     assert rendered.startswith("> **Cricket — BLOCK**")
     assert "Publishing now." not in rendered
+
+
+def test_blockquote_renderer_contains_multiline_critic_output() -> None:
+    class MultilineCritic:
+        def critique(self, *, prompt, request):
+            return [{
+                "rule_id": "SEM.MULTILINE",
+                "severity": "CHALLENGE",
+                "title": "First line\nsecond line",
+                "rationale": "Reason one\nReason two",
+                "evidence": "Evidence one\nEvidence two",
+                "recommendation": "Do one\nDo two",
+            }]
+
+    result = Cricket(critic=MultilineCritic()).review(
+        ReviewRequest(user_message="u", candidate_response="c")
+    )
+    rendered = render_blockquote(result)
+    assert rendered
+    assert all(line.startswith(">") for line in rendered.splitlines())
