@@ -195,3 +195,35 @@ def test_direct_request_constructor_validates_collection_members() -> None:
         assert "claims" in str(exc)
     else:
         raise AssertionError("direct constructor must validate claims")
+
+
+def test_request_requires_user_message_and_candidate_response() -> None:
+    for raw, missing in (
+        ({"candidate_response": "c"}, "user_message"),
+        ({"user_message": "u"}, "candidate_response"),
+    ):
+        try:
+            ReviewRequest.from_dict(raw)
+        except ValueError as exc:
+            assert "required" in str(exc).lower()
+            assert missing in str(exc)
+        else:
+            raise AssertionError(f"{missing} must be required")
+
+
+def test_claim_and_correction_require_identity_fields() -> None:
+    from cricket import Claim, Correction
+
+    try:
+        Claim.from_dict({})
+    except ValueError as exc:
+        assert "statement" in str(exc)
+    else:
+        raise AssertionError("claim statement must be required")
+
+    try:
+        Correction.from_dict({"superseded": "old"})
+    except ValueError as exc:
+        assert "replacement" in str(exc)
+    else:
+        raise AssertionError("correction replacement must be required")
