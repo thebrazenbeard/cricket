@@ -11,7 +11,13 @@ from .reviewer import Cricket
 
 
 class CandidateGenerator(Protocol):
-    def generate(self, *, user_message: str, feedback: str | None = None) -> str: ...
+    def generate(
+        self,
+        *,
+        user_message: str,
+        feedback: str | None = None,
+        previous_candidate: str | None = None,
+    ) -> str: ...
 
 
 class CandidateMetadataProvider(Protocol):
@@ -122,6 +128,7 @@ class ReviewRuntime:
         initial_candidate = self.generator.generate(
             user_message=user_message,
             feedback=None,
+            previous_candidate=None,
         )
         initial_metadata = self._metadata_for(
             user_message=user_message,
@@ -146,6 +153,7 @@ class ReviewRuntime:
             final_candidate = self.generator.generate(
                 user_message=user_message,
                 feedback=feedback,
+                previous_candidate=initial_candidate,
             )
             final_metadata = self._metadata_for(
                 user_message=user_message,
