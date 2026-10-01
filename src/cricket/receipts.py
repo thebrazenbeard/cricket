@@ -53,6 +53,8 @@ class JsonlReceiptLedger:
         return record
 
     def verify(self) -> bool:
+        if not self.path.exists():
+            return False
         previous_digest: str | None = None
         try:
             rows = self._rows()
