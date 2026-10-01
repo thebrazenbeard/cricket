@@ -155,3 +155,43 @@ def test_request_rejects_unknown_fields_instead_of_silently_dropping_them() -> N
         assert "completion_claime" in str(exc)
     else:
         raise AssertionError("unknown review-envelope fields must fail closed")
+
+
+def test_request_rejects_non_string_identity_fields() -> None:
+    for field in ("user_message", "candidate_response", "phase"):
+        raw = {
+            "user_message": "u",
+            "candidate_response": "c",
+            "phase": "pre_send",
+        }
+        raw[field] = {"not": "text"}
+        try:
+            ReviewRequest.from_dict(raw)
+        except ValueError as exc:
+            assert field in str(exc)
+        else:
+            raise AssertionError(f"{field} must require text")
+
+
+def test_direct_request_constructor_validates_collection_members() -> None:
+    try:
+        ReviewRequest(
+            user_message="u",
+            candidate_response="c",
+            principles=("valid", 3),  # type: ignore[arg-type]
+        )
+    except ValueError as exc:
+        assert "principles" in str(exc)
+    else:
+        raise AssertionError("direct constructor must validate principles")
+
+    try:
+        ReviewRequest(
+            user_message="u",
+            candidate_response="c",
+            claims=("not-a-claim",),  # type: ignore[arg-type]
+        )
+    except ValueError as exc:
+        assert "claims" in str(exc)
+    else:
+        raise AssertionError("direct constructor must validate claims")
