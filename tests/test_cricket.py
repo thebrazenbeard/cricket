@@ -141,3 +141,17 @@ def test_direct_request_constructor_rejects_invalid_authority_fields() -> None:
         assert "explicit_authorization" in str(exc)
     else:
         raise AssertionError("direct constructor must reject non-boolean authority")
+
+
+def test_request_rejects_unknown_fields_instead_of_silently_dropping_them() -> None:
+    try:
+        ReviewRequest.from_dict({
+            "user_message": "u",
+            "candidate_response": "c",
+            "completion_claime": True,
+        })
+    except ValueError as exc:
+        assert "unknown" in str(exc).lower()
+        assert "completion_claime" in str(exc)
+    else:
+        raise AssertionError("unknown review-envelope fields must fail closed")
