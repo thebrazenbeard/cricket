@@ -4,6 +4,14 @@ import json
 from pathlib import Path
 from typing import Iterable
 
+from .behavior import (
+    BehavioralAssessment,
+    BehavioralHypothesis,
+    BehavioralObservation,
+    BehavioralPattern,
+    BehavioralScanner,
+    HypothesisState,
+)
 from .policy import PrinciplePack
 from .receipts import JsonlReceiptLedger
 from .render import render_chat_turn
@@ -44,6 +52,35 @@ class RighterSimulationExtractor:
             ),
         ))
         return source, candidate
+
+
+
+class BehaviorSimulationExtractor:
+    def extract(self, *, source_text: str, candidate_text: str):
+        careful = "one possibility" in candidate_text.casefold()
+        return BehavioralAssessment(
+            observations=(
+                BehavioralObservation(
+                    observation_id="obs-1",
+                    subject="candidate",
+                    description="The answer attributes a motive to the actor.",
+                    source_ref="candidate:1",
+                ),
+            ),
+            hypotheses=(
+                BehavioralHypothesis(
+                    hypothesis_id="hyp-1",
+                    pattern=BehavioralPattern.STATUS_DEFENSE,
+                    subject="actor",
+                    evidence_refs=("obs-1",),
+                    rationale="Status defense is one interpretation of the described behavior.",
+                    alternative_explanations=(
+                        ("Ordinary disagreement",) if careful else ()
+                    ),
+                    state=HypothesisState.SUPPORTED,
+                ),
+            ),
+        )
 
 
 class ScriptedGenerator:
@@ -149,6 +186,22 @@ def run_reference_simulation(state_dir: str | Path) -> dict[str, object]:
         user_message="I think Cricket probably needs its own personality."
     )
 
+
+    behavior_runtime = ReviewRuntime(
+        cricket=Cricket(
+            behavior_scanner=BehavioralScanner(BehaviorSimulationExtractor())
+        ),
+        generator=ScriptedGenerator([
+            "They did it because they were protecting their status.",
+            "One possibility is status defense, but ordinary disagreement could also explain it.",
+        ]),
+        principle_pack=pack,
+        receipt_ledger=ledger,
+    )
+    behavior_outcome = behavior_runtime.run(
+        user_message="Why did they do that?"
+    )
+
     receipt_count = len(
         [line for line in ledger_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     )
@@ -163,6 +216,7 @@ def run_reference_simulation(state_dir: str | Path) -> dict[str, object]:
             "challenge_revision": _scenario_record(challenge_outcome),
             "block": _scenario_record(block_outcome),
             "righter": _scenario_record(righter_outcome),
+            "behavior": _scenario_record(behavior_outcome),
         },
     }
 
