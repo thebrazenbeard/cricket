@@ -12,6 +12,8 @@ DEFAULT_CRICKET_PERSONA = CricketPersona(
         PersonaTrait.QUIET_WHEN_CLEAN,
         PersonaTrait.NO_CRUELTY,
         PersonaTrait.NO_PERFORMATIVE_CONTRARIANISM,
+        PersonaTrait.LOYAL_OPPOSITION,
+        PersonaTrait.MATERIALITY,
     ),
     motto="Don't be good. Be difficult to fool.",
 )
