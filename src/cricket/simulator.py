@@ -9,6 +9,7 @@ from .receipts import JsonlReceiptLedger
 from .render import render_chat_turn
 from .reviewer import Cricket
 from .runtime import ReviewRuntime
+from .semantic import Force, SemanticFrame, SemanticIntegrityScanner, SemanticProposition
 
 
 DEFAULT_SIMULATION_PRINCIPLES = (
@@ -21,6 +22,28 @@ DEFAULT_SIMULATION_PRINCIPLES = (
     "Treat reviewer output as fallible unless independently verified.",
     "Stay quiet when there is no material objection.",
 )
+
+
+class RighterSimulationExtractor:
+    def extract_pair(self, *, source_text: str, candidate_text: str):
+        source = SemanticFrame(propositions=(
+            SemanticProposition(
+                anchor_id="p1",
+                referent="cricket",
+                predicate="needs_personality",
+                force=Force.PROBABLE,
+            ),
+        ))
+        candidate_force = Force.PROBABLE if "probably" in candidate_text.casefold() else Force.ASSERTED
+        candidate = SemanticFrame(propositions=(
+            SemanticProposition(
+                anchor_id="p1",
+                referent="cricket",
+                predicate="needs_personality",
+                force=candidate_force,
+            ),
+        ))
+        return source, candidate
 
 
 class ScriptedGenerator:
@@ -111,6 +134,21 @@ def run_reference_simulation(state_dir: str | Path) -> dict[str, object]:
         },
     )
 
+    righter_runtime = ReviewRuntime(
+        cricket=Cricket(
+            semantic_scanner=SemanticIntegrityScanner(RighterSimulationExtractor())
+        ),
+        generator=ScriptedGenerator([
+            "You're right. Cricket needs its own personality.",
+            "You're right that Cricket probably needs its own personality.",
+        ]),
+        principle_pack=pack,
+        receipt_ledger=ledger,
+    )
+    righter_outcome = righter_runtime.run(
+        user_message="I think Cricket probably needs its own personality."
+    )
+
     receipt_count = len(
         [line for line in ledger_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     )
@@ -124,6 +162,7 @@ def run_reference_simulation(state_dir: str | Path) -> dict[str, object]:
             "pass": _scenario_record(pass_outcome),
             "challenge_revision": _scenario_record(challenge_outcome),
             "block": _scenario_record(block_outcome),
+            "righter": _scenario_record(righter_outcome),
         },
     }
 
