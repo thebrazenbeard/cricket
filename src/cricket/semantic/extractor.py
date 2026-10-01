@@ -18,7 +18,6 @@ Return exactly one JSON object with keys "source" and "candidate".
 Each value is a semantic frame with:
 - propositions[]
 - unresolved_interpretations[]
-- behavioral_hypotheses[]
 
 For proposition pairs that represent the same underlying proposition, use the same shared anchor_id.
 Do not force alignment when the candidate adds, drops, or substitutes a proposition.
