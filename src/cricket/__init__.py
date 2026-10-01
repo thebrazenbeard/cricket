@@ -2,7 +2,7 @@
 
 from .interruption import InterruptionAction, InterruptionResponse, RezonInterruptionComposer, WebhookInterruptionProcessor
 from .models import Claim, Correction, Disposition, Finding, ReviewRequest, ReviewResult, Severity
-from .persona import CricketPersona, DEFAULT_CRICKET_PERSONA
+from .personality import CricketPersona, DEFAULT_CRICKET_PERSONA
 from .policy import PrinciplePack
 from .receipts import JsonlReceiptLedger, canonical_digest
 from .render import render_blockquote, render_chat_turn
