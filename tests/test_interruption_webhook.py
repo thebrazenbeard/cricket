@@ -134,3 +134,26 @@ def test_rezon_task_preserves_literal_context_and_candor_personality_constraints
     assert "absolute candor" in constraints.casefold()
     assert "sass" in constraints.casefold()
     assert "do not invent" in constraints.casefold()
+    assert task["persona"]["id"] == "cricket"
+    assert task["persona"]["version"] == "1"
+    assert "ABSOLUTE_CANDOR" in task["persona"]["traits"]
+
+
+def test_webhook_response_is_json_safe() -> None:
+    rezon = FakeRezonReasoner({
+        "message": "Nope. Evidence first.",
+        "finding_ids": ["CRICKET.EVIDENCE.COMPLETION_WITHOUT_VERIFICATION"],
+        "unresolved": [],
+    })
+    response = WebhookInterruptionProcessor(
+        cricket=Cricket(),
+        composer=RezonInterruptionComposer(rezon),
+    ).handle({
+        "user_message": "Fix it.",
+        "candidate_response": "Done.",
+        "completion_claimed": True,
+    })
+    payload = response.to_dict()
+    assert payload["action"] == "INJECT_AND_REVISE"
+    assert payload["formulation_source"] == "rezon"
+    assert isinstance(payload["finding_ids"], list)
