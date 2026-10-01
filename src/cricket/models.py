@@ -62,6 +62,14 @@ class ReviewRequest:
     principles: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        if self.effect_class not in {"none", "reversible", "protected"}:
+            raise ValueError("effect_class must be one of: none, reversible, protected")
+        if not isinstance(self.explicit_authorization, bool):
+            raise ValueError("explicit_authorization must be a boolean")
+        if not isinstance(self.completion_claimed, bool):
+            raise ValueError("completion_claimed must be a boolean")
+
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "ReviewRequest":
         if not isinstance(raw, dict):
