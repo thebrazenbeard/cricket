@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from .models import Disposition, ReviewResult
-from .personality import DEFAULT_CRICKET_PERSONA, CricketPersona, persona_line_for_finding
 from .persona import CricketPersona, DEFAULT_CRICKET_PERSONA
 from .persona_voice import persona_line_for_finding
 
@@ -26,18 +25,6 @@ def render_blockquote(
     if not result.findings:
         lines.extend([">", "> No material objection."])
         return "\n".join(lines)
-
-    persona_line = next(
-        (
-            line
-            for finding in result.findings
-            if (line := persona_line_for_finding(finding, persona))
-        ),
-        "",
-    )
-    if persona_line:
-        lines.append(">")
-        _append_quoted(lines, persona_line)
 
     for finding in result.findings:
         lines.append(">")
