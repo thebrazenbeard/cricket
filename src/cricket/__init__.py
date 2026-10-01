@@ -6,6 +6,7 @@ from .receipts import JsonlReceiptLedger, canonical_digest
 from .render import render_blockquote, render_chat_turn
 from .reviewer import Cricket
 from .runtime import CandidateGenerator, CandidateMetadataProvider, ReviewOutcome, ReviewRuntime
+from .simulator import run_reference_simulation
 
 __all__ = [
     "CandidateGenerator",
@@ -25,4 +26,5 @@ __all__ = [
     "canonical_digest",
     "render_blockquote",
     "render_chat_turn",
+    "run_reference_simulation",
 ]
