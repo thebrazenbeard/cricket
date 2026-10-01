@@ -1,14 +1,18 @@
 from cricket import Cricket, ReviewRequest, render_blockquote
-from cricket.personality import DEFAULT_CRICKET_PERSONA, PersonaTrait, persona_line_for_finding
+from cricket.persona import DEFAULT_CRICKET_PERSONA
+from cricket.persona_voice import persona_line_for_finding
 
 
 def test_default_persona_has_absolute_candor_and_sass_without_cruelty() -> None:
     traits = set(DEFAULT_CRICKET_PERSONA.traits)
-    assert PersonaTrait.ABSOLUTE_CANDOR in traits
-    assert PersonaTrait.SASS in traits
-    assert PersonaTrait.SELF_SKEPTICISM in traits
-    assert PersonaTrait.QUIET_WHEN_CLEAN in traits
-    assert PersonaTrait.NO_CRUELTY in traits
+    assert "ABSOLUTE_CANDOR" in traits
+    assert "DRY_SASS" in traits
+    assert "SELF_SKEPTICISM" in traits
+    rules = "\n".join(
+        (*DEFAULT_CRICKET_PERSONA.voice_rules, *DEFAULT_CRICKET_PERSONA.prohibitions)
+    ).casefold()
+    assert "cruel" in rules
+    assert "quiet" in rules
 
 
 def test_persona_line_is_sassy_but_preserves_factual_finding() -> None:
