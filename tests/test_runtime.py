@@ -101,3 +101,61 @@ def test_receipt_ledger_detects_tampering(tmp_path: Path) -> None:
     row["final_disposition"] = "BLOCK"
     path.write_text(json.dumps(row) + "\n", encoding="utf-8")
     assert ledger.verify() is False
+
+
+def test_cli_review_can_apply_pack_and_write_receipt(tmp_path: Path, capsys) -> None:
+    from cricket.cli import main
+
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({
+        "user_message": "fix it",
+        "candidate_response": "Done.",
+        "completion_claimed": True,
+    }), encoding="utf-8")
+    pack_path = tmp_path / "pack.json"
+    pack_path.write_text(json.dumps({
+        "id": "test-pack",
+        "version": "1",
+        "principles": ["Track the actual proposition."],
+    }), encoding="utf-8")
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    assert main([
+        "review",
+        str(request_path),
+        "--json",
+        "--principle-pack",
+        str(pack_path),
+        "--receipt-ledger",
+        str(ledger_path),
+    ]) == 1
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["disposition"] == "CHALLENGE"
+    ledger = JsonlReceiptLedger(ledger_path)
+    assert ledger.verify() is True
+    row = json.loads(ledger_path.read_text(encoding="utf-8"))
+    assert row["principle_pack"] == {"id": "test-pack", "version": "1"}
+    assert row["disposition"] == "CHALLENGE"
+
+
+def test_cli_verify_ledger_reports_validity(tmp_path: Path, capsys) -> None:
+    from cricket.cli import main
+
+    ledger_path = tmp_path / "ledger.jsonl"
+    ledger = JsonlReceiptLedger(ledger_path)
+    ledger.append({
+        "request_digest": "r1",
+        "disposition": "PASS",
+        "finding_ids": [],
+    })
+
+    assert main(["verify-ledger", str(ledger_path)]) == 0
+    assert json.loads(capsys.readouterr().out) == {"valid": True}
+
+    row = json.loads(ledger_path.read_text(encoding="utf-8"))
+    row["disposition"] = "BLOCK"
+    ledger_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    assert main(["verify-ledger", str(ledger_path)]) == 2
+    assert json.loads(capsys.readouterr().out) == {"valid": False}
