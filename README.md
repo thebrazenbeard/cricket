@@ -23,9 +23,9 @@ findings are advisory by default.
 
 See docs/RESEARCH.md.
 
-## V0.3
+## V0.4 — Semantic Integrity + Rezon-formulated interruptions
 
-V0.3 keeps the review kernel and bounded host cycle, and adds a self-contained reference runtime simulator. It implements:
+V0.4 extends the review kernel with typed semantic integrity, evidence-bound behavioral hypotheses, a versioned Cricket persona, and a webhook-style interruption pipeline in which Rezon formulates Cricket’s visible intervention. It implements:
 
 - PASS, CHALLENGE, and BLOCK dispositions;
 - silent-on-pass behavior;
@@ -46,7 +46,15 @@ V0.3 keeps the review kernel and bounded host cycle, and adds a self-contained r
 - versioned principle packs that augment, rather than replace, request-local principles;
 - a bounded `ReviewRuntime`: generate -> review -> at most one revision -> review;
 - tamper-evident JSONL review receipts linked by SHA-256 hash chain;
-- refusal to append new receipts when the existing ledger does not verify.
+- refusal to append new receipts when the existing ledger does not verify;
+- typed semantic frames for proposition, referent, modality, polarity, scope, speech act, currentness, and provenance;
+- semantic transformation classes including strengthening/weakening, referent drift, scope change, authority escalation, contradiction, currentness promotion, and provenance change;
+- explicit ambiguity preservation instead of forced interpretation;
+- evidence-bound behavioral hypotheses informed by Trek Data Core and Mediaphile methods;
+- Cricket Persona V1: absolute candor, dry sass, loyal opposition, self-skepticism, and materiality;
+- Rezon as Cricket's semantic/reasoning upstream for proposition fidelity and interruption formulation;
+- webhook-style `ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT` responses;
+- deterministic Cricket fallback if Rezon formulation is unavailable or malformed.
 
 ## Example
 
@@ -169,12 +177,13 @@ A missing ledger does **not** verify successfully. An existing empty ledger is a
 
 ## Self-contained reference host
 
-`cricket simulate` runs three deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
-chat renderer, and receipt ledger:
+`cricket simulate` runs four deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
+semantic scanner, chat renderer, and receipt ledger:
 
 1. clean candidate -> PASS;
 2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
-3. unauthorized protected effect -> BLOCK, with the candidate suppressed.
+3. unauthorized protected effect -> BLOCK, with the candidate suppressed;
+4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS.
 
 Run:
 
@@ -182,5 +191,37 @@ Run:
     cricket simulate --json
     cricket simulate --state-dir ./state/cricket-sim --json
 
-The simulation writes a three-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
+The simulation writes a four-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
 model or provider, so it can run deterministically in CI or any installed Python environment.
+
+
+## Semantic integrity
+
+Cricket does not reduce meaning preservation to a single similarity score. The semantic layer tracks typed changes in proposition/referent, modality, polarity, scope, speech act, currentness, provenance, and unresolved interpretations.
+
+This is where Cricket catches the Righter failure mechanically: a user's `PROBABLE` proposition becoming an `ASSERTED` proposition is `STRENGTHENED`, not a harmless paraphrase.
+
+See `docs/SEMANTIC_LINEAGE.md`.
+
+## Rezon-formulated interruption injection
+
+Cricket is webhook-shaped even when embedded in-process:
+
+```text
+candidate
+   |
+   v
+Cricket detects material defect
+   |
+   v
+Rezon formulates the interruption in Cricket's persona
+   |
+   v
+host receives ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT
+```
+
+Cricket owns the finding and disposition. Rezon owns the reasoned wording. The host owns injection and effects.
+
+Rezon cannot grant authority, invent finding IDs, or downgrade a Cricket block. If Rezon formulation fails validation, Cricket falls back to its deterministic renderer and the interruption is preserved.
+
+See `docs/WEBHOOK_INJECTION.md` and `personality/CRICKET_PERSONA.md`.
