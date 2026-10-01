@@ -91,3 +91,29 @@ def test_cli_exit_codes_and_json(tmp_path: Path, capsys) -> None:
     assert main(["review", str(request), "--json"]) == 2
     out = json.loads(capsys.readouterr().out)
     assert out["disposition"] == "BLOCK"
+
+
+def test_request_rejects_string_boolean() -> None:
+    try:
+        ReviewRequest.from_dict({
+            "user_message": "u",
+            "candidate_response": "c",
+            "explicit_authorization": "false",
+        })
+    except ValueError as exc:
+        assert "boolean" in str(exc)
+    else:
+        raise AssertionError("string boolean must be rejected")
+
+
+def test_request_rejects_unknown_effect_class() -> None:
+    try:
+        ReviewRequest.from_dict({
+            "user_message": "u",
+            "candidate_response": "c",
+            "effect_class": "magic",
+        })
+    except ValueError as exc:
+        assert "effect_class" in str(exc)
+    else:
+        raise AssertionError("unknown effect class must be rejected")
