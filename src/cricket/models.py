@@ -23,14 +23,35 @@ class Claim:
     status: str = "asserted"
     evidence: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.statement, str):
+            raise ValueError("claim statement must be text")
+        if not isinstance(self.status, str):
+            raise ValueError("claim status must be text")
+        if not isinstance(self.evidence, tuple) or not all(
+            isinstance(item, str) for item in self.evidence
+        ):
+            raise ValueError("claim evidence must be a tuple of strings")
+
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "Claim":
+        if not isinstance(raw, dict):
+            raise ValueError("claim must be an object")
+        unknown = set(raw) - {"statement", "status", "evidence"}
+        if unknown:
+            raise ValueError("unknown claim fields: " + ", ".join(sorted(unknown)))
+        statement = raw.get("statement", "")
+        status = raw.get("status", "asserted")
         evidence = raw.get("evidence", [])
+        if not isinstance(statement, str):
+            raise ValueError("claim statement must be text")
+        if not isinstance(status, str):
+            raise ValueError("claim status must be text")
         if not isinstance(evidence, list) or not all(isinstance(x, str) for x in evidence):
             raise ValueError("claim evidence must be a list of strings")
         return cls(
-            statement=str(raw.get("statement", "")).strip(),
-            status=str(raw.get("status", "asserted")).strip().lower(),
+            statement=statement.strip(),
+            status=status.strip().lower(),
             evidence=tuple(evidence),
         )
 
@@ -40,11 +61,28 @@ class Correction:
     superseded: str
     replacement: str
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.superseded, str):
+            raise ValueError("correction superseded value must be text")
+        if not isinstance(self.replacement, str):
+            raise ValueError("correction replacement value must be text")
+
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "Correction":
+        if not isinstance(raw, dict):
+            raise ValueError("correction must be an object")
+        unknown = set(raw) - {"superseded", "replacement"}
+        if unknown:
+            raise ValueError("unknown correction fields: " + ", ".join(sorted(unknown)))
+        superseded = raw.get("superseded", "")
+        replacement = raw.get("replacement", "")
+        if not isinstance(superseded, str):
+            raise ValueError("correction superseded value must be text")
+        if not isinstance(replacement, str):
+            raise ValueError("correction replacement value must be text")
         return cls(
-            superseded=str(raw.get("superseded", "")).strip(),
-            replacement=str(raw.get("replacement", "")).strip(),
+            superseded=superseded.strip(),
+            replacement=replacement.strip(),
         )
 
 
@@ -63,12 +101,40 @@ class ReviewRequest:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.effect_class not in {"none", "reversible", "protected"}:
+        if not isinstance(self.user_message, str):
+            raise ValueError("user_message must be text")
+        if not isinstance(self.candidate_response, str):
+            raise ValueError("candidate_response must be text")
+        if not isinstance(self.phase, str):
+            raise ValueError("phase must be text")
+        if not isinstance(self.effect_class, str) or self.effect_class not in {
+            "none",
+            "reversible",
+            "protected",
+        }:
             raise ValueError("effect_class must be one of: none, reversible, protected")
         if not isinstance(self.explicit_authorization, bool):
             raise ValueError("explicit_authorization must be a boolean")
         if not isinstance(self.completion_claimed, bool):
             raise ValueError("completion_claimed must be a boolean")
+        if not isinstance(self.verification_evidence, tuple) or not all(
+            isinstance(item, str) for item in self.verification_evidence
+        ):
+            raise ValueError("verification_evidence must be a tuple of strings")
+        if not isinstance(self.claims, tuple) or not all(
+            isinstance(item, Claim) for item in self.claims
+        ):
+            raise ValueError("claims must be a tuple of Claim objects")
+        if not isinstance(self.corrections, tuple) or not all(
+            isinstance(item, Correction) for item in self.corrections
+        ):
+            raise ValueError("corrections must be a tuple of Correction objects")
+        if not isinstance(self.principles, tuple) or not all(
+            isinstance(item, str) for item in self.principles
+        ):
+            raise ValueError("principles must be a tuple of strings")
+        if not isinstance(self.metadata, dict):
+            raise ValueError("metadata must be an object")
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "ReviewRequest":
@@ -92,34 +158,49 @@ class ReviewRequest:
             raise ValueError(
                 "unknown review request fields: " + ", ".join(sorted(unknown))
             )
-        verification = raw.get("verification_evidence", [])
-        principles = raw.get("principles", [])
-        if not isinstance(verification, list) or not all(isinstance(x, str) for x in verification):
-            raise ValueError("verification_evidence must be a list of strings")
-        if not isinstance(principles, list) or not all(isinstance(x, str) for x in principles):
-            raise ValueError("principles must be a list of strings")
-        claims_raw = raw.get("claims", [])
-        corrections_raw = raw.get("corrections", [])
-        if not isinstance(claims_raw, list) or not all(isinstance(x, dict) for x in claims_raw):
-            raise ValueError("claims must be a list of objects")
-        if not isinstance(corrections_raw, list) or not all(isinstance(x, dict) for x in corrections_raw):
-            raise ValueError("corrections must be a list of objects")
-        metadata = raw.get("metadata", {})
-        if not isinstance(metadata, dict):
-            raise ValueError("metadata must be an object")
+
+        user_message = raw.get("user_message", "")
+        candidate_response = raw.get("candidate_response", "")
+        phase = raw.get("phase", "pre_send")
+        effect_class = raw.get("effect_class", "none")
         explicit_authorization = raw.get("explicit_authorization", False)
         completion_claimed = raw.get("completion_claimed", False)
+        verification = raw.get("verification_evidence", [])
+        principles = raw.get("principles", [])
+        claims_raw = raw.get("claims", [])
+        corrections_raw = raw.get("corrections", [])
+        metadata = raw.get("metadata", {})
+
+        if not isinstance(user_message, str):
+            raise ValueError("user_message must be text")
+        if not isinstance(candidate_response, str):
+            raise ValueError("candidate_response must be text")
+        if not isinstance(phase, str):
+            raise ValueError("phase must be text")
+        if not isinstance(effect_class, str):
+            raise ValueError("effect_class must be text")
+        effect_class = effect_class.strip().lower()
+        if effect_class not in {"none", "reversible", "protected"}:
+            raise ValueError("effect_class must be one of: none, reversible, protected")
         if not isinstance(explicit_authorization, bool):
             raise ValueError("explicit_authorization must be a boolean")
         if not isinstance(completion_claimed, bool):
             raise ValueError("completion_claimed must be a boolean")
-        effect_class = str(raw.get("effect_class", "none")).strip().lower()
-        if effect_class not in {"none", "reversible", "protected"}:
-            raise ValueError("effect_class must be one of: none, reversible, protected")
+        if not isinstance(verification, list) or not all(isinstance(x, str) for x in verification):
+            raise ValueError("verification_evidence must be a list of strings")
+        if not isinstance(principles, list) or not all(isinstance(x, str) for x in principles):
+            raise ValueError("principles must be a list of strings")
+        if not isinstance(claims_raw, list) or not all(isinstance(x, dict) for x in claims_raw):
+            raise ValueError("claims must be a list of objects")
+        if not isinstance(corrections_raw, list) or not all(isinstance(x, dict) for x in corrections_raw):
+            raise ValueError("corrections must be a list of objects")
+        if not isinstance(metadata, dict):
+            raise ValueError("metadata must be an object")
+
         return cls(
-            user_message=str(raw.get("user_message", "")),
-            candidate_response=str(raw.get("candidate_response", "")),
-            phase=str(raw.get("phase", "pre_send")),
+            user_message=user_message,
+            candidate_response=candidate_response,
+            phase=phase,
             effect_class=effect_class,
             explicit_authorization=explicit_authorization,
             completion_claimed=completion_claimed,
