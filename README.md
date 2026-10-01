@@ -135,3 +135,29 @@ A `BLOCK` is never used as feedback for an automatic retry. A model may not nego
 Principle packs live under `principles/`. The default pack is versioned and injected into the review envelope without overwriting request-local principles.
 
 `JsonlReceiptLedger` records review-cycle evidence in a single-writer append-only JSONL chain. Each row binds to the previous row digest. The ledger refuses further appends if prior rows no longer verify.
+
+## Semantic critic adapter
+
+`cricket.adapters.JsonCompletionCritic` adapts any host-supplied completion client with this minimal interface:
+
+    complete(system: str, user: str) -> str
+
+The completion must return a strict JSON array of Cricket finding objects. Malformed JSON, non-array output, and non-object entries fail closed. Cricket does not strip code fences or guess at malformed reviewer output.
+
+Example:
+
+    from cricket import Cricket
+    from cricket.adapters import JsonCompletionCritic
+
+    critic = JsonCompletionCritic(my_completion_client)
+    cricket = Cricket(critic=critic)
+
+The full review envelope—including principles and explicit corrections—is serialized into the critic request. Semantic `BLOCK` remains downgraded to `CHALLENGE` unless the host deliberately opts into semantic blocking.
+
+## CLI policy and receipts
+
+    cricket review examples/review.json --principle-pack principles/default.json
+    cricket review examples/review.json --receipt-ledger state/cricket.jsonl --json
+    cricket verify-ledger state/cricket.jsonl
+
+A missing ledger does **not** verify successfully. An existing empty ledger is a valid empty chain; once receipts exist, each row is bound to the preceding receipt digest.
