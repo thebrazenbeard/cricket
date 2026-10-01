@@ -183,7 +183,8 @@ semantic scanner, chat renderer, and receipt ledger:
 1. clean candidate -> PASS;
 2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
 3. unauthorized protected effect -> BLOCK, with the candidate suppressed;
-4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;\n5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
+4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;
+5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
 
 Run:
 
