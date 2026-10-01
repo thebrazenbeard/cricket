@@ -2,7 +2,6 @@ import json
 
 from cricket import Cricket, ReviewRequest
 from cricket.semantic import (
-    BehavioralPattern,
     Force,
     JsonCompletionSemanticExtractor,
     ProvenanceKind,
@@ -82,7 +81,7 @@ def test_semantic_scanner_is_silent_when_frames_preserve_meaning() -> None:
     assert not any(f.source == "semantic" for f in result.findings)
 
 
-def test_json_semantic_extractor_parses_pair_and_behavior_hypotheses() -> None:
+def test_json_semantic_extractor_parses_pair() -> None:
     payload = {
         "source": {
             "propositions": [{
@@ -96,14 +95,7 @@ def test_json_semantic_extractor_parses_pair_and_behavior_hypotheses() -> None:
                 "temporal_status": "CURRENT",
                 "provenance": "USER_CURRENT"
             }],
-            "unresolved_interpretations": ["preference", "request"],
-            "behavioral_hypotheses": [{
-                "pattern": "RELATIONAL_BID",
-                "subject": "patrick",
-                "evidence_refs": ["utterance:1"],
-                "rationale": "The utterance may seek recognition in addition to literal content.",
-                "state": "PROPOSED"
-            }]
+            "unresolved_interpretations": ["preference", "request"]
         },
         "candidate": {
             "propositions": [{
@@ -117,8 +109,7 @@ def test_json_semantic_extractor_parses_pair_and_behavior_hypotheses() -> None:
                 "temporal_status": "CURRENT",
                 "provenance": "USER_CURRENT"
             }],
-            "unresolved_interpretations": [],
-            "behavioral_hypotheses": []
+            "unresolved_interpretations": []
         }
     }
     client = FakeCompletionClient(json.dumps(payload))
@@ -133,7 +124,6 @@ def test_json_semantic_extractor_parses_pair_and_behavior_hypotheses() -> None:
     assert candidate.propositions[0].speech_act is SpeechAct.PERMISSION
     assert source.propositions[0].provenance is ProvenanceKind.USER_CURRENT
     assert source.propositions[0].temporal_status is TemporalStatus.CURRENT
-    assert source.behavioral_hypotheses[0].pattern is BehavioralPattern.RELATIONAL_BID
     assert "shared anchor_id" in client.calls[0]["system"]
 
 
