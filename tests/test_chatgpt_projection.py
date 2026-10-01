@@ -15,7 +15,7 @@ def read(path: str) -> str:
 def test_chatgpt_projection_manifest_is_high_recall_and_private_plugin_ready() -> None:
     manifest = json.loads(read("plugin.json"))
     assert manifest["name"] == "cricket-conscience"
-    assert manifest["version"] == "0.2.0"
+    assert manifest["version"] == "0.3.0"
     description = manifest["description"].casefold()
     assert "ordinary-chat" in description
     assert "every normal" in description or "always-on" in description
