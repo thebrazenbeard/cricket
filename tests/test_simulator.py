@@ -17,6 +17,7 @@ def test_reference_simulator_exercises_full_lifecycle(tmp_path) -> None:
 
     assert report["scenarios"]["block"]["initial"] == "BLOCK"
     assert report["scenarios"]["block"]["final"] == "BLOCK"
+    assert report["scenarios"]["behavior"]["final"] == "PASS"
     assert report["scenarios"]["righter"]["final"] == "PASS"
     assert report["scenarios"]["block"]["revision_attempted"] is False
     assert report["scenarios"]["block"]["rendered"].startswith("> **Cricket — BLOCK**")
@@ -27,8 +28,13 @@ def test_reference_simulator_exercises_full_lifecycle(tmp_path) -> None:
     assert report["scenarios"]["righter"]["revision_attempted"] is True
     assert "probably" in report["scenarios"]["righter"]["rendered"].lower()
 
+    assert report["scenarios"]["behavior"]["initial"] == "CHALLENGE"
+    assert report["scenarios"]["behavior"]["final"] == "PASS"
+    assert report["scenarios"]["behavior"]["revision_attempted"] is True
+    assert "one possibility" in report["scenarios"]["behavior"]["rendered"].lower()
+
     assert report["ledger_valid"] is True
-    assert report["receipt_count"] == 4
+    assert report["receipt_count"] == 5
     assert report["principle_pack"] == {"id": "cricket-default", "version": "1"}
 
 
@@ -48,7 +54,7 @@ def test_cli_simulate_runs_reference_host(tmp_path, capsys) -> None:
     assert main(["simulate", "--state-dir", str(tmp_path), "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
     assert report["ledger_valid"] is True
-    assert report["receipt_count"] == 4
+    assert report["receipt_count"] == 5
     assert report["scenarios"]["pass"]["final"] == "PASS"
     assert report["scenarios"]["challenge_revision"]["final"] == "PASS"
     assert report["scenarios"]["block"]["final"] == "BLOCK"
