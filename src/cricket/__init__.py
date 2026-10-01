@@ -5,9 +5,11 @@ from .policy import PrinciplePack
 from .receipts import JsonlReceiptLedger, canonical_digest
 from .render import render_blockquote
 from .reviewer import Cricket
-from .runtime import ReviewOutcome, ReviewRuntime
+from .runtime import CandidateGenerator, CandidateMetadataProvider, ReviewOutcome, ReviewRuntime
 
 __all__ = [
+    "CandidateGenerator",
+    "CandidateMetadataProvider",
     "Claim",
     "Correction",
     "Cricket",
