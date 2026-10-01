@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thebrazenbeard.github.io/cricket/review-request.schema.json",
+  "title": "Cricket Review Request",
+  "type": "object",
+  "required": ["user_message", "candidate_response"],
+  "properties": {
+    "user_message": {"type": "string"},
+    "candidate_response": {"type": "string"},
+    "phase": {"type": "string", "default": "pre_send"},
+    "effect_class": {"type": "string", "enum": ["none", "reversible", "protected"]},
+    "explicit_authorization": {"type": "boolean"},
+    "completion_claimed": {"type": "boolean"},
+    "verification_evidence": {"type": "array", "items": {"type": "string"}},
+    "claims": {"type": "array", "items": {"type": "object"}},
+    "corrections": {"type": "array", "items": {"type": "object"}},
+    "principles": {"type": "array", "items": {"type": "string"}},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}
