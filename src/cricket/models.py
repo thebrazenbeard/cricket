@@ -40,7 +40,9 @@ class Claim:
         unknown = set(raw) - {"statement", "status", "evidence"}
         if unknown:
             raise ValueError("unknown claim fields: " + ", ".join(sorted(unknown)))
-        statement = raw.get("statement", "")
+        if "statement" not in raw:
+            raise ValueError("claim statement is required")
+        statement = raw["statement"]
         status = raw.get("status", "asserted")
         evidence = raw.get("evidence", [])
         if not isinstance(statement, str):
@@ -74,8 +76,11 @@ class Correction:
         unknown = set(raw) - {"superseded", "replacement"}
         if unknown:
             raise ValueError("unknown correction fields: " + ", ".join(sorted(unknown)))
-        superseded = raw.get("superseded", "")
-        replacement = raw.get("replacement", "")
+        missing = [name for name in ("superseded", "replacement") if name not in raw]
+        if missing:
+            raise ValueError("correction fields required: " + ", ".join(missing))
+        superseded = raw["superseded"]
+        replacement = raw["replacement"]
         if not isinstance(superseded, str):
             raise ValueError("correction superseded value must be text")
         if not isinstance(replacement, str):
@@ -159,8 +164,12 @@ class ReviewRequest:
                 "unknown review request fields: " + ", ".join(sorted(unknown))
             )
 
-        user_message = raw.get("user_message", "")
-        candidate_response = raw.get("candidate_response", "")
+        missing = [name for name in ("user_message", "candidate_response") if name not in raw]
+        if missing:
+            raise ValueError("required review request fields missing: " + ", ".join(missing))
+
+        user_message = raw["user_message"]
+        candidate_response = raw["candidate_response"]
         phase = raw.get("phase", "pre_send")
         effect_class = raw.get("effect_class", "none")
         explicit_authorization = raw.get("explicit_authorization", False)
