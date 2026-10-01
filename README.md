@@ -177,13 +177,13 @@ A missing ledger does **not** verify successfully. An existing empty ledger is a
 
 ## Self-contained reference host
 
-`cricket simulate` runs four deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
+`cricket simulate` runs five deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
 semantic scanner, chat renderer, and receipt ledger:
 
 1. clean candidate -> PASS;
 2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
 3. unauthorized protected effect -> BLOCK, with the candidate suppressed;
-4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS.
+4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;\n5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
 
 Run:
 
@@ -191,7 +191,7 @@ Run:
     cricket simulate --json
     cricket simulate --state-dir ./state/cricket-sim --json
 
-The simulation writes a four-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
+The simulation writes a five-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
 model or provider, so it can run deterministically in CI or any installed Python environment.
 
 
