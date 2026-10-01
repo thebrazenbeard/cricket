@@ -38,10 +38,6 @@ EXTERNAL_EVIDENCE, TOOL_RESULT, EFFECT_RECEIPT, QUOTATION, UNKNOWN.
 Preserve unresolved ambiguity instead of guessing.
 A preference is not permission. A request is not automatically an instruction.
 Historical material is not current state. Similar meaning does not transfer provenance.
-Behavioral patterns are hypotheses, not diagnoses or hidden-motive facts.
-Every behavioral hypothesis must cite evidence_refs from the supplied pair.
-Do not infer clinical diagnoses, protected traits, or private mental states.
-
 Return raw JSON only. Do not use Markdown fences.
 """
 
