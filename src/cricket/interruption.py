@@ -7,7 +7,7 @@ import json
 from typing import Any, Protocol
 
 from .models import Disposition, ReviewRequest, ReviewResult
-from .persona import CricketPersona, DEFAULT_CRICKET_PERSONA
+from .personality import CricketPersona, DEFAULT_CRICKET_PERSONA
 from .render import render_blockquote
 from .reviewer import Cricket
 
@@ -94,9 +94,9 @@ class RezonInterruptionComposer:
             "resource_budget": 4,
             "context_refs": finding_ids,
             "persona": {
-                "id": self.persona.id,
+                "id": self.persona.name,
                 "version": self.persona.version,
-                "traits": list(self.persona.traits),
+                "traits": [trait.value for trait in self.persona.traits],
                 "motto": self.persona.motto,
             },
             "context": {
