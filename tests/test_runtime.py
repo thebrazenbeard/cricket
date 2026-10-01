@@ -221,3 +221,22 @@ def test_revision_generator_receives_candidate_it_is_revising() -> None:
         request_metadata={"completion_claimed": True},
     )
     assert generator.previous_candidates == [None, "first candidate"]
+
+
+def test_runtime_receipt_binds_initial_and_final_candidates(tmp_path: Path) -> None:
+    from cricket.receipts import canonical_digest
+
+    generator = SequenceGenerator(["Done.", "Revised answer."])
+    ledger = JsonlReceiptLedger(tmp_path / "receipts.jsonl")
+    runtime = ReviewRuntime(
+        cricket=Cricket(),
+        generator=generator,
+        receipt_ledger=ledger,
+    )
+    outcome = runtime.run(
+        user_message="fix it",
+        request_metadata={"completion_claimed": True},
+    )
+    assert outcome.receipt is not None
+    assert outcome.receipt["initial_candidate_digest"] == canonical_digest("Done.")
+    assert outcome.receipt["final_candidate_digest"] == canonical_digest("Revised answer.")
