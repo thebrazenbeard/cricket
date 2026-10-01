@@ -159,3 +159,11 @@ def test_cli_verify_ledger_reports_validity(tmp_path: Path, capsys) -> None:
 
     assert main(["verify-ledger", str(ledger_path)]) == 2
     assert json.loads(capsys.readouterr().out) == {"valid": False}
+
+
+def test_cli_verify_missing_ledger_is_not_reported_valid(tmp_path: Path, capsys) -> None:
+    from cricket.cli import main
+
+    missing = tmp_path / "does-not-exist.jsonl"
+    assert main(["verify-ledger", str(missing)]) == 2
+    assert json.loads(capsys.readouterr().out) == {"valid": False}
