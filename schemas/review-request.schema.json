@@ -12,8 +12,31 @@
     "explicit_authorization": {"type": "boolean"},
     "completion_claimed": {"type": "boolean"},
     "verification_evidence": {"type": "array", "items": {"type": "string"}},
-    "claims": {"type": "array", "items": {"type": "object"}},
-    "corrections": {"type": "array", "items": {"type": "object"}},
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["statement"],
+        "properties": {
+          "statement": {"type": "string"},
+          "status": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["superseded", "replacement"],
+        "properties": {
+          "superseded": {"type": "string"},
+          "replacement": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
     "principles": {"type": "array", "items": {"type": "string"}},
     "metadata": {"type": "object"}
   },
