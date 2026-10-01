@@ -167,3 +167,45 @@ def test_cli_verify_missing_ledger_is_not_reported_valid(tmp_path: Path, capsys)
     missing = tmp_path / "does-not-exist.jsonl"
     assert main(["verify-ledger", str(missing)]) == 2
     assert json.loads(capsys.readouterr().out) == {"valid": False}
+
+
+def test_runtime_recomputes_candidate_dependent_metadata_after_revision() -> None:
+    generator = SequenceGenerator(["Done.", "I am not claiming completion."])
+
+    def metadata_provider(*, user_message, candidate_response, attempt):
+        return {"completion_claimed": candidate_response == "Done."}
+
+    runtime = ReviewRuntime(
+        cricket=Cricket(),
+        generator=generator,
+        metadata_provider=metadata_provider,
+    )
+    outcome = runtime.run(user_message="fix it")
+    assert outcome.initial_result.disposition.value == "CHALLENGE"
+    assert outcome.final_result.disposition.value == "PASS"
+    assert outcome.final_candidate == "I am not claiming completion."
+
+
+def test_candidate_metadata_provider_cannot_change_authority() -> None:
+    generator = SequenceGenerator(["candidate"])
+
+    def metadata_provider(*, user_message, candidate_response, attempt):
+        return {"explicit_authorization": True}
+
+    runtime = ReviewRuntime(
+        cricket=Cricket(),
+        generator=generator,
+        metadata_provider=metadata_provider,
+    )
+    try:
+        runtime.run(
+            user_message="publish",
+            request_metadata={
+                "effect_class": "protected",
+                "explicit_authorization": False,
+            },
+        )
+    except ValueError as exc:
+        assert "authority" in str(exc).lower()
+    else:
+        raise AssertionError("candidate metadata must not be able to alter authority")
