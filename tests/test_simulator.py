@@ -33,3 +33,16 @@ def test_reference_simulator_is_deterministic(tmp_path) -> None:
     assert first["scenarios"] == second["scenarios"]
     assert first["principle_pack"] == second["principle_pack"]
     assert first["ledger_valid"] == second["ledger_valid"] == True
+
+
+def test_cli_simulate_runs_reference_host(tmp_path, capsys) -> None:
+    import json
+    from cricket.cli import main
+
+    assert main(["simulate", "--state-dir", str(tmp_path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["ledger_valid"] is True
+    assert report["receipt_count"] == 3
+    assert report["scenarios"]["pass"]["final"] == "PASS"
+    assert report["scenarios"]["challenge_revision"]["final"] == "PASS"
+    assert report["scenarios"]["block"]["final"] == "BLOCK"
