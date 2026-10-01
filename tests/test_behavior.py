@@ -130,3 +130,73 @@ def test_behavioral_scanner_is_operational_but_advisory() -> None:
 
 def test_semantic_frame_no_longer_owns_behavioral_hypotheses() -> None:
     assert "behavioral_hypotheses" not in SemanticFrame.__dataclass_fields__
+
+
+def test_behavioral_source_contracts_are_pinned_and_non_authoritative() -> None:
+    from cricket.behavior import MEDIAPHILE, TREK_DATA_CORE
+
+    assert TREK_DATA_CORE.commit == "58f25f8c45e8379df0ef7c7b5db546e037d1c050"
+    assert TREK_DATA_CORE.relationship == "METHODOLOGY_DONOR"
+    assert MEDIAPHILE.commit == "5540d7e2f0b07c0e91a1158c9c00f63be9d9587a"
+    assert MEDIAPHILE.relationship == "PATTERN_CORPUS_DONOR"
+    assert "not evidence about real people's motives" in MEDIAPHILE.use
+
+
+def test_json_behavior_extractor_keeps_observation_hypothesis_and_rivals_separate() -> None:
+    import json
+    from cricket.behavior import JsonCompletionBehaviorExtractor
+
+    class Client:
+        def __init__(self):
+            self.calls = []
+
+        def complete(self, *, system: str, user: str) -> str:
+            self.calls.append({"system": system, "user": user})
+            return json.dumps({
+                "observations": [{
+                    "observation_id": "obs-1",
+                    "subject": "candidate",
+                    "description": "The explanation changes after disconfirming evidence.",
+                    "source_ref": "candidate:1"
+                }],
+                "hypotheses": [{
+                    "hypothesis_id": "hyp-1",
+                    "pattern": "RATIONALIZATION",
+                    "subject": "candidate",
+                    "evidence_refs": ["obs-1"],
+                    "rationale": "The changed explanation may be post-hoc.",
+                    "alternative_explanations": ["New information became available."],
+                    "state": "PROPOSED"
+                }]
+            })
+
+    client = Client()
+    assessment = JsonCompletionBehaviorExtractor(client).extract(
+        source_text="Why did the explanation change?",
+        candidate_text="Because they were rationalizing.",
+    )
+    assert assessment.observations[0].observation_id == "obs-1"
+    assert assessment.hypotheses[0].alternative_explanations == (
+        "New information became available.",
+    )
+    prompt = client.calls[0]["system"].casefold()
+    assert "not to read minds" in prompt
+    assert "do not diagnose" in prompt
+
+
+def test_json_behavior_extractor_fails_closed_on_malformed_output() -> None:
+    from cricket.behavior import JsonCompletionBehaviorExtractor
+
+    class Client:
+        def complete(self, *, system: str, user: str) -> str:
+            return "not-json"
+
+    try:
+        JsonCompletionBehaviorExtractor(Client()).extract(
+            source_text="a",
+            candidate_text="b",
+        )
+    except ValueError as exc:
+        assert "valid json" in str(exc).casefold()
+    else:
+        raise AssertionError("malformed behavioral extraction must fail closed")
