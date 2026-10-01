@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .models import Disposition, ReviewResult
+from .personality import DEFAULT_CRICKET_PERSONA, CricketPersona, persona_line_for_finding
 from .persona import CricketPersona, DEFAULT_CRICKET_PERSONA
 from .persona_voice import persona_line_for_finding
 
@@ -44,6 +45,9 @@ def render_blockquote(
         lines.append(f"> **[{finding.severity.value}] {title_lines[0]}**")
         for title_line in title_lines[1:]:
             lines.append(f"> **{title_line}**")
+        persona_line = persona_line_for_finding(finding, persona)
+        if persona_line:
+            _append_quoted(lines, persona_line)
         _append_quoted(lines, finding.rationale)
         if finding.evidence:
             _append_quoted(lines, finding.evidence, label="Evidence: ")
