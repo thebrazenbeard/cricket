@@ -180,6 +180,8 @@ class ReviewRuntime:
                             "initial_metadata": initial_metadata,
                         }
                     ),
+                    "initial_candidate_digest": canonical_digest(initial_candidate),
+                    "final_candidate_digest": canonical_digest(final_candidate),
                     "initial_disposition": initial_result.disposition.value,
                     "final_disposition": final_result.disposition.value,
                     "revision_attempted": revision_attempted,
