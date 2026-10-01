@@ -34,3 +34,14 @@ def test_persona_line_is_sassy_but_preserves_factual_finding() -> None:
 def test_personality_stays_silent_on_clean_pass() -> None:
     result = Cricket().review(ReviewRequest(user_message="u", candidate_response="c"))
     assert render_blockquote(result) == ""
+
+
+def test_machine_readable_persona_matches_canonical_runtime_model() -> None:
+    import json
+    from pathlib import Path
+    from cricket.persona import CricketPersona
+
+    raw = json.loads(Path("personality/cricket-v1.json").read_text(encoding="utf-8"))
+    artifact = CricketPersona.from_dict(raw)
+
+    assert artifact == DEFAULT_CRICKET_PERSONA

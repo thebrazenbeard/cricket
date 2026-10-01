@@ -14,6 +14,7 @@ from .receipts import JsonlReceiptLedger, canonical_digest
 from .render import render_blockquote
 from .reviewer import Cricket
 from .simulator import run_reference_simulation
+from .upstreams import UPSTREAM_CONTRACTS, UpstreamStatus, evaluate_upstreams
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,6 +34,10 @@ def build_parser() -> argparse.ArgumentParser:
     simulate = sub.add_parser("simulate", help="run Cricket's self-contained reference host simulation")
     simulate.add_argument("--state-dir", default=".cricket-sim", help="directory for simulation receipts")
     simulate.add_argument("--json", action="store_true", help="emit structured JSON")
+
+    upstreams = sub.add_parser("upstreams", help="inspect Cricket's pinned upstream compatibility contracts")
+    upstreams.add_argument("--observed", help="JSON mapping of repository name to observed commit")
+    upstreams.add_argument("--json", action="store_true", help="emit structured JSON")
 
     sub.add_parser("prompt", help="print the semantic critic prompt contract")
     return parser
@@ -76,6 +81,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"revision_attempted={scenario['revision_attempted']}"
                 )
         return 0 if report["ledger_valid"] else 2
+
+    if args.command == "upstreams":
+        observed = {}
+        if args.observed:
+            raw = json.loads(Path(args.observed).read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                raise ValueError("observed upstream file must contain a JSON object")
+            observed = raw
+        report = evaluate_upstreams(observed)
+        if args.json:
+            print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        else:
+            print(f"Cricket upstream status: {report.status.value}")
+            for item in report.results:
+                observed_text = item.observed_commit or "unobserved"
+                print(
+                    f"{item.status.value}: {item.repository} "
+                    f"pinned={item.pinned_commit} observed={observed_text} "
+                    f"relationship={item.relationship}"
+                )
+        if report.status is UpstreamStatus.MOVED:
+            return 2
+        if report.status is UpstreamStatus.UNKNOWN:
+            return 1
+        return 0
 
     request = _load_request(args.request)
     if args.principle_pack:
