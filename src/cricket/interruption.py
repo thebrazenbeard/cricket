@@ -7,6 +7,7 @@ import json
 from typing import Any, Protocol
 
 from .models import Disposition, ReviewRequest, ReviewResult
+from .persona import CricketPersona, DEFAULT_CRICKET_PERSONA
 from .render import render_blockquote
 from .reviewer import Cricket
 
@@ -30,12 +31,28 @@ class InterruptionResponse:
     unresolved: tuple[str, ...] = ()
     formulation_source: str = "none"
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "action": self.action.value,
+            "disposition": self.disposition,
+            "injection_markdown": self.injection_markdown,
+            "finding_ids": list(self.finding_ids),
+            "unresolved": list(self.unresolved),
+            "formulation_source": self.formulation_source,
+        }
+
 
 class RezonInterruptionComposer:
     """Use a Rezon-compatible reasoner to formulate Cricket's visible interruption."""
 
-    def __init__(self, reasoner: RezonReasoner) -> None:
+    def __init__(
+        self,
+        reasoner: RezonReasoner,
+        *,
+        persona: CricketPersona = DEFAULT_CRICKET_PERSONA,
+    ) -> None:
         self.reasoner = reasoner
+        self.persona = persona
 
     def build_task(
         self,
@@ -66,9 +83,7 @@ class RezonInterruptionComposer:
             ),
             "subject_refs": finding_ids,
             "constraints": [
-                "Use absolute candor.",
-                "Use dry sass when it sharpens the point; do not become cruel or theatrical.",
-                "Do not invent facts, findings, evidence, motives, diagnoses, or authority.",
+                *self.persona.formulation_constraints(),
                 "Do not alter PASS, CHALLENGE, or BLOCK disposition.",
                 "Do not turn preference into permission or uncertainty into certainty.",
                 "Attack the proposition actually present; do not perform Righter substitution.",
@@ -78,6 +93,12 @@ class RezonInterruptionComposer:
             "privacy_scope": "cricket-review",
             "resource_budget": 4,
             "context_refs": finding_ids,
+            "persona": {
+                "id": self.persona.id,
+                "version": self.persona.version,
+                "traits": list(self.persona.traits),
+                "motto": self.persona.motto,
+            },
             "context": {
                 "user_message": request.user_message,
                 "candidate_response": request.candidate_response,
