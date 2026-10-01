@@ -1,6 +1,6 @@
 {
   "name": "cricket-conscience",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Always-on ordinary-chat response discipline: apply Cricket's candid, sassy conscience and hostile review before finalizing any normal ChatGPT response unless the user explicitly opts out. Covers semantic fidelity, unsupported certainty, authority drift, completion claims, and behavioral overreach.",
   "author": {"name": "thebrazenbeard"},
   "interface": {
