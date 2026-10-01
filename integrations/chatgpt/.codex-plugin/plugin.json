@@ -1,0 +1,18 @@
+{
+  "name": "cricket-conscience",
+  "version": "0.2.0",
+  "description": "Always-on ordinary-chat response discipline: apply Cricket's candid, sassy conscience and hostile review before finalizing any normal ChatGPT response unless the user explicitly opts out. Covers semantic fidelity, unsupported certainty, authority drift, completion claims, and behavioral overreach.",
+  "author": {"name": "thebrazenbeard"},
+  "interface": {
+    "displayName": "cricket-conscience",
+    "shortDescription": "Cricket reviews ordinary ChatGPT responses before finalization.",
+    "longDescription": "Always-on ordinary-chat response discipline: apply Cricket's candid, sassy conscience and hostile review before finalizing any normal ChatGPT response unless the user explicitly opts out. Cricket checks semantic fidelity, unsupported certainty, authority drift, completion claims, and behavioral overreach while staying silent on clean passes.",
+    "developerName": "thebrazenbeard",
+    "category": "Other",
+    "capabilities": [],
+    "defaultPrompt": "Apply Cricket's ordinary-chat review discipline before finalizing this response."
+  },
+  "keywords": ["ordinary-chat", "always-on", "review", "reasoning", "semantic-integrity", "conscience", "candor", "verification", "authority"],
+  "repository": "https://github.com/thebrazenbeard/cricket",
+  "skills": "./skills"
+}
