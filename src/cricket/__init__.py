@@ -9,6 +9,7 @@ from .render import render_blockquote, render_chat_turn
 from .reviewer import Cricket
 from .runtime import CandidateGenerator, CandidateMetadataProvider, ReviewOutcome, ReviewRuntime
 from .simulator import run_reference_simulation
+from .upstreams import UPSTREAM_CONTRACTS, UpstreamReport, UpstreamResult, UpstreamStatus, evaluate_upstreams
 
 __all__ = [
     "CandidateGenerator",
@@ -30,8 +31,13 @@ __all__ = [
     "ReviewRuntime",
     "RezonInterruptionComposer",
     "Severity",
+    "UPSTREAM_CONTRACTS",
+    "UpstreamReport",
+    "UpstreamResult",
+    "UpstreamStatus",
     "WebhookInterruptionProcessor",
     "canonical_digest",
+    "evaluate_upstreams",
     "render_blockquote",
     "render_chat_turn",
     "run_reference_simulation",
