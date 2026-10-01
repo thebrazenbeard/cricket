@@ -1,3 +1,34 @@
+## V0.6 — Ordinary Chat projection
+
+V0.6 adds a reproducible ordinary-Chat projection for Cricket under `integrations/chatgpt/`.
+
+Ordinary Chat currently does not expose the same platform-enforced `Stop` lifecycle hook available to ChatGPT Work/Codex. The V0.6 workaround therefore layers:
+
+1. a private `cricket-conscience` ChatGPT plugin;
+2. deliberately broad activation metadata;
+3. a full Cricket review skill;
+4. a second `cricket-ordinary-chat-default` skill whose activation description covers every normal user request;
+5. an account-level Custom Instructions template that explicitly asks ordinary Chat to apply Cricket every turn.
+
+This is a high-recall instruction-layer projection, not a host-enforced lifecycle guarantee.
+
+```text
+PLUGIN_RELEVANCE != GUARANTEED_EXECUTION
+CUSTOM_INSTRUCTION != HOST_STOP_HOOK
+```
+
+The projection is kept separate from the core runtime:
+
+```text
+src/cricket/                = executable conscience/reviewer
+integrations/chatgpt/       = ordinary-Chat instruction projection
+```
+
+Run `python scripts/build_chatgpt_plugin.py` to produce an uploadable private-plugin archive.
+
+The account-level instruction template is `integrations/chatgpt/CUSTOM_INSTRUCTIONS.md`.
+
+
 # Cricket
 
 Cricket is a provider-neutral **simulated conscience and hostile reviewer for AI runtime behavior**. It watches a candidate
