@@ -23,6 +23,34 @@ findings are advisory by default.
 
 See docs/RESEARCH.md.
 
+## V0.5 — Upstream compatibility currentness
+
+V0.5 begins the post-reconciliation expansion line by making Cricket's upstream relationships observable instead of merely documented.
+
+`cricket upstreams` evaluates host-supplied live repository heads against Cricket's pinned compatibility contracts.
+
+Statuses:
+
+```text
+CURRENT  = observed head exactly matches the pinned compatibility baseline
+MOVED    = upstream head changed; Cricket's compatibility claim is stale pending review
+UNKNOWN  = no current observation was supplied
+```
+
+`MOVED` does **not** mean the upstream is incompatible. It means prior compatibility evidence is now historical and must be re-evaluated against the new exact head.
+
+Cricket itself performs no network access for this check. A host, GitHub connector, CI job, or other observer supplies the live heads.
+
+Example:
+
+```bash
+cricket upstreams --observed live-heads.json --json
+```
+
+Exit codes are `0=CURRENT`, `1=UNKNOWN`, and `2=MOVED`.
+
+The registry currently covers Rezon plus the semantic and behavioral donor baselines recorded in `docs/SEMANTIC_LINEAGE.md`.
+
 ## V0.4 — Semantic integrity, behavioral interpretation, and Cricket Persona V1
 
 V0.4 extends the review kernel with typed semantic integrity, a separate evidence-bound behavioral interpretation lane, Cricket Persona V1, and a webhook-shaped interruption surface. Rezon is the semantic/reasoning upstream and may optionally formulate Cricket’s visible intervention. It implements:
@@ -183,7 +211,8 @@ semantic scanner, chat renderer, and receipt ledger:
 1. clean candidate -> PASS;
 2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
 3. unauthorized protected effect -> BLOCK, with the candidate suppressed;
-4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;\n5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
+4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;
+5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
 
 Run:
 
