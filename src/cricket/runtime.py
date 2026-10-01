@@ -14,6 +14,16 @@ class CandidateGenerator(Protocol):
     def generate(self, *, user_message: str, feedback: str | None = None) -> str: ...
 
 
+class CandidateMetadataProvider(Protocol):
+    def __call__(
+        self,
+        *,
+        user_message: str,
+        candidate_response: str,
+        attempt: int,
+    ) -> dict[str, Any]: ...
+
+
 @dataclass(frozen=True)
 class ReviewOutcome:
     initial_candidate: str
@@ -27,6 +37,8 @@ class ReviewOutcome:
 class ReviewRuntime:
     """Bounded host-side review loop: generate -> review -> at most one revision."""
 
+    _AUTHORITY_FIELDS = frozenset({"effect_class", "explicit_authorization"})
+
     def __init__(
         self,
         *,
@@ -34,11 +46,50 @@ class ReviewRuntime:
         generator: CandidateGenerator,
         principle_pack: PrinciplePack | None = None,
         receipt_ledger: JsonlReceiptLedger | None = None,
+        metadata_provider: CandidateMetadataProvider | None = None,
     ) -> None:
         self.cricket = cricket
         self.generator = generator
         self.principle_pack = principle_pack
         self.receipt_ledger = receipt_ledger
+        self.metadata_provider = metadata_provider
+
+    def _metadata_for(
+        self,
+        *,
+        user_message: str,
+        candidate_response: str,
+        attempt: int,
+        base_metadata: dict[str, Any],
+    ) -> dict[str, Any]:
+        metadata = dict(base_metadata)
+        if self.metadata_provider is None:
+            return metadata
+
+        dynamic = self.metadata_provider(
+            user_message=user_message,
+            candidate_response=candidate_response,
+            attempt=attempt,
+        )
+        if not isinstance(dynamic, dict):
+            raise ValueError("candidate metadata provider must return an object")
+
+        forbidden_identity = {"user_message", "candidate_response"} & set(dynamic)
+        if forbidden_identity:
+            raise ValueError(
+                "candidate metadata provider may not override request identity: "
+                + ", ".join(sorted(forbidden_identity))
+            )
+
+        authority_drift = self._AUTHORITY_FIELDS & set(dynamic)
+        if authority_drift:
+            raise ValueError(
+                "candidate metadata provider may not alter authority fields: "
+                + ", ".join(sorted(authority_drift))
+            )
+
+        metadata.update(dynamic)
+        return metadata
 
     def _request(
         self,
@@ -66,21 +117,29 @@ class ReviewRuntime:
         user_message: str,
         request_metadata: dict[str, Any] | None = None,
     ) -> ReviewOutcome:
-        metadata = dict(request_metadata or {})
+        base_metadata = dict(request_metadata or {})
+
         initial_candidate = self.generator.generate(
             user_message=user_message,
             feedback=None,
         )
+        initial_metadata = self._metadata_for(
+            user_message=user_message,
+            candidate_response=initial_candidate,
+            attempt=0,
+            base_metadata=base_metadata,
+        )
         initial_request = self._request(
             user_message=user_message,
             candidate_response=initial_candidate,
-            request_metadata=metadata,
+            request_metadata=initial_metadata,
         )
         initial_result = self.cricket.review(initial_request)
 
         revision_attempted = initial_result.disposition is Disposition.CHALLENGE
         final_candidate = initial_candidate
         final_result = initial_result
+        final_metadata = initial_metadata
 
         if revision_attempted:
             feedback = render_blockquote(initial_result, speak_on_pass=True)
@@ -88,10 +147,16 @@ class ReviewRuntime:
                 user_message=user_message,
                 feedback=feedback,
             )
+            final_metadata = self._metadata_for(
+                user_message=user_message,
+                candidate_response=final_candidate,
+                attempt=1,
+                base_metadata=base_metadata,
+            )
             final_request = self._request(
                 user_message=user_message,
                 candidate_response=final_candidate,
-                request_metadata=metadata,
+                request_metadata=final_metadata,
             )
             final_result = self.cricket.review(final_request)
 
@@ -102,8 +167,9 @@ class ReviewRuntime:
                     "request_digest": canonical_digest(
                         {
                             "user_message": user_message,
-                            "request_metadata": metadata,
+                            "base_metadata": base_metadata,
                             "initial_candidate": initial_candidate,
+                            "initial_metadata": initial_metadata,
                         }
                     ),
                     "initial_disposition": initial_result.disposition.value,
@@ -111,6 +177,7 @@ class ReviewRuntime:
                     "revision_attempted": revision_attempted,
                     "initial_finding_ids": [f.rule_id for f in initial_result.findings],
                     "final_finding_ids": [f.rule_id for f in final_result.findings],
+                    "final_metadata_digest": canonical_digest(final_metadata),
                 }
             )
 
