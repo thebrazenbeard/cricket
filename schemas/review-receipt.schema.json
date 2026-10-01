@@ -12,7 +12,10 @@
       ]
     },
     "receipt_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "request_digest": {"type": "string"},
+    "request_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "initial_candidate_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "final_candidate_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "final_metadata_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "disposition": {"type": "string", "enum": ["PASS", "CHALLENGE", "BLOCK"]},
     "initial_disposition": {"type": "string", "enum": ["PASS", "CHALLENGE", "BLOCK"]},
     "final_disposition": {"type": "string", "enum": ["PASS", "CHALLENGE", "BLOCK"]},
