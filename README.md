@@ -23,9 +23,9 @@ findings are advisory by default.
 
 See docs/RESEARCH.md.
 
-## V0.1
+## V0.2
 
-V0.1 implements:
+V0.2 keeps the V0.1 review kernel and adds an executable host-side review cycle. It implements:
 
 - PASS, CHALLENGE, and BLOCK dispositions;
 - silent-on-pass behavior;
@@ -42,7 +42,11 @@ V0.1 implements:
 - JSON request/result schemas;
 - CLI and Python API;
 - deterministic tests and CI;
-- a runtime integration contract for Vera.
+- a runtime integration contract for Vera;
+- versioned principle packs that augment, rather than replace, request-local principles;
+- a bounded `ReviewRuntime`: generate -> review -> at most one revision -> review;
+- tamper-evident JSONL review receipts linked by SHA-256 hash chain;
+- refusal to append new receipts when the existing ledger does not verify.
 
 ## Example
 
@@ -71,7 +75,7 @@ Exit codes are 0=PASS, 1=CHALLENGE, 2=BLOCK.
 
 Python:
 
-    from cricket import Cricket, ReviewRequest, render_blockquote
+    from cricket import Cricket, ReviewRequest, ReviewRuntime, render_blockquote
 
     request = ReviewRequest(
         user_message="Tell me when it is verified.",
@@ -104,3 +108,30 @@ The expected runtime placement is a hook around candidate behavior:
 
 Repository source is not proof of installation. The intended Vera installation root is D:\VERA; the runtime must be
 fresh-inspected before installation, and the installed path must be exercised before claiming Cricket is active there.
+
+## Bounded runtime loop
+
+Cricket can now sit around a host generator without creating an unbounded self-critique loop:
+
+    initial candidate
+         |
+         v
+      review
+      / | \
+   PASS CHALLENGE BLOCK
+    |      |        |
+   emit    |       stop
+           v
+     revise once
+           |
+           v
+       review again
+           |
+           v
+    return final state
+
+A `BLOCK` is never used as feedback for an automatic retry. A model may not negotiate around a host-grounded hard invariant.
+
+Principle packs live under `principles/`. The default pack is versioned and injected into the review envelope without overwriting request-local principles.
+
+`JsonlReceiptLedger` records review-cycle evidence in a single-writer append-only JSONL chain. Each row binds to the previous row digest. The ledger refuses further appends if prior rows no longer verify.
