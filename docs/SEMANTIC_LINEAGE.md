@@ -1,6 +1,6 @@
 # Semantic and Behavioral Lineage — Cricket V0.4
 
-Cricket V0.4 internalizes a bounded semantic-integrity and behavioral-hypothesis layer. These repositories are **source lineage**, not runtime dependencies unless separately stated.
+Cricket V0.4 internalizes a bounded semantic-integrity layer and a separate behavioral-interpretation lane. These repositories are **source lineage**, not runtime dependencies unless separately stated.
 
 COPIED_LINEAGE != INDEPENDENT_CORROBORATION
 
@@ -134,3 +134,14 @@ It may not silently promote:
 `NARRATIVE_ANALOGY -> PERSON_FACT`
 
 A behavioral hypothesis must carry explicit evidence references and remain reviewable.
+
+In V0.4, behavioral interpretation lives under `cricket.behavior`, not inside `SemanticFrame`. That separation is intentional:
+
+```text
+SEMANTIC_CHANGE = what meaning changed
+BEHAVIORAL_HYPOTHESIS = one evidence-bound interpretation of observed behavior
+```
+
+A `SUPPORTED` behavioral hypothesis should retain at least one plausible rival explanation. Without a rival explanation, Cricket challenges the interpretation rather than treating it as settled.
+
+The pinned behavioral donor contracts are also represented in `cricket.behavior.sources`.
