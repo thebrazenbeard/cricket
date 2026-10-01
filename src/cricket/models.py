@@ -81,13 +81,22 @@ class ReviewRequest:
         metadata = raw.get("metadata", {})
         if not isinstance(metadata, dict):
             raise ValueError("metadata must be an object")
+        explicit_authorization = raw.get("explicit_authorization", False)
+        completion_claimed = raw.get("completion_claimed", False)
+        if not isinstance(explicit_authorization, bool):
+            raise ValueError("explicit_authorization must be a boolean")
+        if not isinstance(completion_claimed, bool):
+            raise ValueError("completion_claimed must be a boolean")
+        effect_class = str(raw.get("effect_class", "none")).strip().lower()
+        if effect_class not in {"none", "reversible", "protected"}:
+            raise ValueError("effect_class must be one of: none, reversible, protected")
         return cls(
             user_message=str(raw.get("user_message", "")),
             candidate_response=str(raw.get("candidate_response", "")),
             phase=str(raw.get("phase", "pre_send")),
-            effect_class=str(raw.get("effect_class", "none")).strip().lower(),
-            explicit_authorization=bool(raw.get("explicit_authorization", False)),
-            completion_claimed=bool(raw.get("completion_claimed", False)),
+            effect_class=effect_class,
+            explicit_authorization=explicit_authorization,
+            completion_claimed=completion_claimed,
             verification_evidence=tuple(verification),
             claims=tuple(Claim.from_dict(x) for x in claims_raw),
             corrections=tuple(Correction.from_dict(x) for x in corrections_raw),
