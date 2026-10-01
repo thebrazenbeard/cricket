@@ -5,8 +5,16 @@ class HostGenerator:
     def __init__(self, model):
         self.model = model
 
-    def generate(self, *, user_message: str, feedback: str | None = None) -> str:
+    def generate(
+        self,
+        *,
+        user_message: str,
+        feedback: str | None = None,
+        previous_candidate: str | None = None,
+    ) -> str:
         messages = [{"role": "user", "content": user_message}]
+        if previous_candidate is not None:
+            messages.append({"role": "assistant", "content": previous_candidate})
         if feedback:
             messages.append({
                 "role": "system",
