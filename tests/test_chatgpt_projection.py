@@ -70,3 +70,32 @@ def test_projection_documents_platform_guarantee_ceiling() -> None:
     assert "not a platform-enforced lifecycle hook" in docs
     assert "relevance-based" in docs
     assert "Custom Instructions" in docs
+
+
+def test_plugin_builder_packages_only_plugin_runtime_files(tmp_path, monkeypatch) -> None:
+    import importlib.util
+    import tarfile
+
+    script = ROOT / "scripts" / "build_chatgpt_plugin.py"
+    spec = importlib.util.spec_from_file_location("build_chatgpt_plugin", script)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    output = tmp_path / "cricket-chatgpt-plugin.tar.gz"
+    monkeypatch.setattr(module, "DIST", tmp_path)
+    monkeypatch.setattr(module, "OUTPUT", output)
+
+    built = module.build()
+    assert built == output
+    assert built.is_file()
+
+    with tarfile.open(built, "r:gz") as archive:
+        names = set(archive.getnames())
+
+    assert "plugin.json" in names
+    assert ".codex-plugin/plugin.json" in names
+    assert "skills/cricket/SKILL.md" in names
+    assert "skills/ordinary-chat-default/SKILL.md" in names
+    assert "README.md" not in names
+    assert "CUSTOM_INSTRUCTIONS.md" not in names
