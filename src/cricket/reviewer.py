@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from .behavior import BehavioralScanner
+from .behavior.scanner import BehavioralScanner
 from .critic import CRITIC_PROMPT, CriticAdapter, parse_critic_findings
 from .models import Disposition, Finding, ReviewRequest, ReviewResult, Severity
 from .rules import DEFAULT_RULES, Rule
@@ -24,6 +25,7 @@ class Cricket:
         self.semantic_blocking = semantic_blocking
         self.semantic_scanner = semantic_scanner
         self.behavior_scanner = behavior_scanner
+        self.behavior_scanner = behavior_scanner
 
     def review(self, request: ReviewRequest) -> ReviewResult:
         findings: list[Finding] = []
@@ -42,6 +44,11 @@ class Cricket:
                     candidate_text=request.candidate_response,
                 )
             )
+        if self.behavior_scanner is not None:
+            findings.extend(self.behavior_scanner.scan(
+                source_text=request.user_message,
+                candidate_text=request.candidate_response,
+            ))
         if self.critic is not None:
             semantic = parse_critic_findings(self.critic.critique(prompt=CRITIC_PROMPT, request=request))
             if not self.semantic_blocking:
