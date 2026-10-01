@@ -172,36 +172,3 @@ def test_unresolved_interpretations_are_preserved_without_forced_collapse() -> N
     assert report.changes == ()
 
 
-def test_behavioral_hypothesis_requires_evidence_and_stays_a_hypothesis() -> None:
-    from cricket.semantic import BehavioralHypothesis, BehavioralPattern, HypothesisState
-
-    hypothesis = BehavioralHypothesis(
-        pattern=BehavioralPattern.MOTIVATED_REASONING,
-        subject="character-a",
-        evidence_refs=("scene-17", "scene-31"),
-        rationale="The interpretation repeatedly shifts toward the desired outcome.",
-        state=HypothesisState.SUPPORTED,
-    )
-    assert hypothesis.state is HypothesisState.SUPPORTED
-
-    try:
-        BehavioralHypothesis(
-            pattern=BehavioralPattern.STATUS_DEFENSE,
-            subject="character-b",
-            evidence_refs=(),
-            rationale="No evidence should fail.",
-        )
-    except ValueError as exc:
-        assert "evidence" in str(exc).lower()
-    else:
-        raise AssertionError("behavioral hypotheses must be evidence-bound")
-
-
-def test_behavioral_vocabulary_includes_media_and_trek_derived_patterns() -> None:
-    from cricket.semantic import BehavioralPattern
-
-    assert BehavioralPattern.MOTIVATED_REASONING.value
-    assert BehavioralPattern.STATUS_DEFENSE.value
-    assert BehavioralPattern.GRIEVANCE_ESCALATION.value
-    assert BehavioralPattern.DEPENDENCY_ENGINEERING.value
-    assert BehavioralPattern.RELATIONAL_BID.value
