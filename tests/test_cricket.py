@@ -117,3 +117,27 @@ def test_request_rejects_unknown_effect_class() -> None:
         assert "effect_class" in str(exc)
     else:
         raise AssertionError("unknown effect class must be rejected")
+
+
+def test_direct_request_constructor_rejects_invalid_authority_fields() -> None:
+    try:
+        ReviewRequest(
+            user_message="u",
+            candidate_response="c",
+            effect_class="magic",
+        )
+    except ValueError as exc:
+        assert "effect_class" in str(exc)
+    else:
+        raise AssertionError("direct constructor must reject unknown effect classes")
+
+    try:
+        ReviewRequest(
+            user_message="u",
+            candidate_response="c",
+            explicit_authorization="false",  # type: ignore[arg-type]
+        )
+    except ValueError as exc:
+        assert "explicit_authorization" in str(exc)
+    else:
+        raise AssertionError("direct constructor must reject non-boolean authority")
