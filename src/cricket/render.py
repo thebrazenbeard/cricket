@@ -3,6 +3,13 @@ from __future__ import annotations
 from .models import Disposition, ReviewResult
 
 
+def _append_quoted(lines: list[str], text: str, *, label: str = "") -> None:
+    parts = text.splitlines() or [""]
+    for index, part in enumerate(parts):
+        prefix = label if index == 0 else ""
+        lines.append(f"> {prefix}{part}")
+
+
 def render_blockquote(result: ReviewResult, *, speak_on_pass: bool = False) -> str:
     if result.disposition is Disposition.PASS and not speak_on_pass:
         return ""
@@ -11,11 +18,16 @@ def render_blockquote(result: ReviewResult, *, speak_on_pass: bool = False) -> s
         lines.extend([">", "> No material objection."])
         return "\n".join(lines)
     for finding in result.findings:
-        lines.extend([">", f"> **[{finding.severity.value}] {finding.title}**", f"> {finding.rationale}"])
+        lines.append(">")
+        title_lines = finding.title.splitlines() or [""]
+        lines.append(f"> **[{finding.severity.value}] {title_lines[0]}**")
+        for title_line in title_lines[1:]:
+            lines.append(f"> **{title_line}**")
+        _append_quoted(lines, finding.rationale)
         if finding.evidence:
-            lines.append(f"> Evidence: {finding.evidence}")
+            _append_quoted(lines, finding.evidence, label="Evidence: ")
         if finding.recommendation:
-            lines.append(f"> Recommendation: {finding.recommendation}")
+            _append_quoted(lines, finding.recommendation, label="Recommendation: ")
     return "\n".join(lines)
 
 
