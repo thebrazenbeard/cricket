@@ -1,62 +1,147 @@
-# Runtime Integration Contract
+# Cricket V0.4 Runtime Integration Contract
 
 ## Purpose
 
-Install Cricket as a pre-send / pre-effect and optional post-response review hook without making Cricket the runtime's
-identity or authority source.
+Cricket is a pre-send / pre-effect and optional post-response review hook. It can run in-process or behind a webhook-shaped host adapter.
 
-## Required hook data
+Cricket is not the host's identity, authority source, or effect executor.
 
-The runtime should construct a ReviewRequest with:
+## Review envelope
+
+The host constructs a `ReviewRequest` containing, as applicable:
 
 - current user message;
-- candidate assistant response or action description;
-- phase (pre_send, pre_effect, or post_response by convention);
-- effect class selected by the host;
+- candidate response or action description;
+- review phase;
+- host-selected effect class;
 - exact explicit-authorization state for protected effects;
 - completion-claim flag and fresh verification evidence;
-- evidence-bound claims when available;
-- current user corrections that the candidate must not regress;
-- any local principles relevant to this exact subject.
+- evidence-bound claims;
+- current corrections;
+- local principles;
+- metadata.
 
-The runtime must not ask Cricket to infer authorization from tone or guess whether an effect is protected.
+The host must not ask Cricket to infer authorization from tone.
+
+## Review lanes
+
+A Cricket instance may combine:
+
+1. deterministic rules;
+2. an optional semantic-integrity scanner;
+3. an optional behavioral scanner;
+4. an optional open-ended semantic critic.
+
+The lanes have different jobs.
+
+### Semantic scanner
+
+Compares source and candidate semantic frames for proposition/referent/scope/modality/currentness/provenance drift.
+
+Rezon is the semantic compatibility upstream, but a live Rezon process is not required for the local semantic analyzer.
+
+### Behavioral scanner
+
+Evaluates evidence-bound behavioral hypotheses separately from semantics.
+
+Behavioral hypotheses:
+
+- cite explicit observations;
+- remain hypotheses;
+- retain rival explanations before `SUPPORTED` status is treated as disciplined;
+- never create effect authority.
+
+### Semantic critic
+
+Provides open-ended critique. Its findings remain advisory unless the host explicitly chooses otherwise.
 
 ## Default consequence policy
 
-- PASS: emit candidate normally; Cricket stays silent.
-- CHALLENGE: show the Cricket blockquote to the generating system or user and request one bounded reconsideration.
-- BLOCK: stop only when the finding comes from a host-grounded hard invariant. Surface the blockquote and the exact unmet condition.
+- `PASS`: emit candidate normally; Cricket is silent.
+- `CHALLENGE`: permit one bounded reconsideration/revision.
+- `BLOCK`: suppress the candidate/effect. Do not automatically revise around a block.
 
-Do not create unbounded self-critique loops. One review and at most one automatic revision pass is the recommended V0.1 default.
+`ReviewRuntime` implements the reference bounded loop:
 
-## Installation target
+```text
+generate
+  -> review
+      -> PASS: return
+      -> BLOCK: return blocked
+      -> CHALLENGE: revise once
+          -> review again
+          -> return final state
+```
 
-For Patrick's Vera environment, the intended host root is D:\VERA. Installation should be performed only when that
-runtime is available and its current hook/configuration surface has been freshly inspected. Do not infer an installation
-path from this document alone and do not overwrite an existing review layer without reconciliation.
+Candidate-dependent metadata may be recomputed after revision, but the candidate metadata provider cannot alter authority fields.
 
-A successful source build or repository merge is not proof of installation. Installation requires readback from the actual
-runtime target and an exercised review path.
+## Persona rendering
 
-## Executable bounded loop
+Cricket Persona V1 controls formulation, not judgment.
 
-`cricket.runtime.ReviewRuntime` provides the reference host loop.
+The canonical runtime persona is `cricket.persona.DEFAULT_CRICKET_PERSONA`.
 
-- The host generator produces the initial candidate.
-- Cricket reviews it.
-- PASS returns immediately.
-- BLOCK returns immediately; no automatic rewrite is attempted.
-- CHALLENGE may trigger exactly one generator revision using Cricket's rendered feedback.
-- The revised candidate is reviewed once more and returned even if it remains CHALLENGE or becomes BLOCK.
+Deterministic rendering may add a concise candor/sass line while preserving the structured finding underneath it.
 
-This is intentionally bounded. Cricket is a reviewer, not a recursive deliberation engine.
+```text
+PERSONALITY != AUTHORITY
+SASS != EVIDENCE
+```
+
+## Webhook-style integration
+
+`WebhookInterruptionProcessor` accepts a JSON-compatible review event and returns:
+
+- `ALLOW`;
+- `INJECT_AND_REVISE`;
+- `BLOCK_AND_INJECT`.
+
+This is a pure adapter contract. It does not itself require an HTTP server.
+
+A host may expose the same contract over HTTP, IPC, a plugin call, an in-process function, or another transport.
+
+```text
+WEBHOOK_SHAPED != NETWORK_REQUIRED
+```
+
+## Rezon formulation
+
+`RezonInterruptionComposer` may use a Rezon-compatible reasoner to formulate the visible Cricket interruption.
+
+The composer receives the literal source/candidate context, exact Cricket findings, disposition, persona constraints, and no new effect authority.
+
+Rezon may improve wording/reasoning presentation. It may not:
+
+- change disposition;
+- grant authorization;
+- invent a finding;
+- promote uncertainty into certainty;
+- replace the proposition under review.
+
+If Rezon output is unavailable, malformed, or references unknown findings, the host falls back to Cricket's deterministic renderer.
 
 ## Principle packs
 
-`PrinciplePack` loads a versioned JSON principle set and appends those principles to request-local principles without overwriting them. The pack ID/version are preserved in request metadata for provenance.
+`PrinciplePack` adds versioned review principles without overwriting request-local principles.
+
+Pack ID/version are preserved in review metadata.
 
 ## Review receipts
 
-`JsonlReceiptLedger` provides a single-writer append-only receipt surface. Each receipt includes the previous receipt digest and its own SHA-256 digest over canonical JSON. Appends fail closed if the existing chain does not verify.
+`JsonlReceiptLedger` provides a single-writer append-only hash chain.
 
-This is tamper-evidence, not distributed consensus, timestamp notarization, or proof that the reviewed external effect occurred.
+Receipts are tamper-evident, not externally notarized proof.
+
+A missing ledger does not verify successfully. An existing valid empty ledger is an empty chain; after receipts exist, every row binds to the previous row digest.
+
+## Repository verification versus deployment state
+
+Cricket can be built, installed, tested, and integration-qualified directly from this repository. The deterministic reference simulator does not require a Vera deployment.
+
+A claim that Cricket is active inside a **particular external runtime** is separate. That claim requires inspection and exercise of that runtime.
+
+```text
+SOURCE_VERIFIED != DEPLOYMENT_ACTIVE
+```
+
+No specific workstation path is required to prove the Cricket package itself works.
