@@ -23,9 +23,9 @@ findings are advisory by default.
 
 See docs/RESEARCH.md.
 
-## V0.4 — Semantic Integrity + Rezon-formulated interruptions
+## V0.4 — Semantic integrity, behavioral interpretation, and Cricket Persona V1
 
-V0.4 extends the review kernel with typed semantic integrity, evidence-bound behavioral hypotheses, a versioned Cricket persona, and a webhook-style interruption pipeline in which Rezon formulates Cricket’s visible intervention. It implements:
+V0.4 extends the review kernel with typed semantic integrity, a separate evidence-bound behavioral interpretation lane, Cricket Persona V1, and a webhook-shaped interruption surface. Rezon is the semantic/reasoning upstream and may optionally formulate Cricket’s visible intervention. It implements:
 
 - PASS, CHALLENGE, and BLOCK dispositions;
 - silent-on-pass behavior;
@@ -52,7 +52,7 @@ V0.4 extends the review kernel with typed semantic integrity, evidence-bound beh
 - explicit ambiguity preservation instead of forced interpretation;
 - evidence-bound behavioral hypotheses informed by Trek Data Core and Mediaphile methods;
 - Cricket Persona V1: absolute candor, dry sass, loyal opposition, self-skepticism, and materiality;
-- Rezon as Cricket's semantic/reasoning upstream for proposition fidelity and interruption formulation;
+- Rezon as Cricket's semantic/reasoning upstream for proposition fidelity, with optional interruption formulation;
 - webhook-style `ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT` responses;
 - deterministic Cricket fallback if Rezon formulation is unavailable or malformed.
 
@@ -203,7 +203,20 @@ This is where Cricket catches the Righter failure mechanically: a user's `PROBAB
 
 See `docs/SEMANTIC_LINEAGE.md`.
 
-## Rezon-formulated interruption injection
+## Behavioral interpretation
+
+Behavioral interpretation is intentionally separate from semantic integrity.
+
+Cricket can bind observations to hypotheses such as motivated reasoning, rationalization, status defense, grievance escalation, dependency engineering, relational bids, or identity protection. A hypothesis must cite explicit observations. A `SUPPORTED` hypothesis without a plausible rival explanation is challenged rather than treated as settled motive.
+
+Trek Data Core supplies the evidence/interpretation discipline. Mediaphile supplies longitudinal pattern vocabulary and contrast cases. Neither is evidence about a real person's hidden motives.
+
+```text
+OBSERVED_BEHAVIOR != HIDDEN_MOTIVE_FACT
+PATTERN_SIMILARITY != DIAGNOSIS
+```
+
+## Optional Rezon-formulated interruption injection
 
 Cricket is webhook-shaped even when embedded in-process:
 
@@ -213,14 +226,15 @@ candidate
    v
 Cricket detects material defect
    |
-   v
-Rezon formulates the interruption in Cricket's persona
+   +--> deterministic Cricket persona rendering
+   |
+   +--> optional Rezon formulation under Cricket constraints
    |
    v
 host receives ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT
 ```
 
-Cricket owns the finding and disposition. Rezon owns the reasoned wording. The host owns injection and effects.
+Cricket owns the finding and disposition. When configured, Rezon may formulate the reasoned wording. The host owns injection and effects.
 
 Rezon cannot grant authority, invent finding IDs, or downgrade a Cricket block. If Rezon formulation fails validation, Cricket falls back to its deterministic renderer and the interruption is preserved.
 
