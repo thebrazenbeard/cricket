@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 
-from cricket import Cricket, Disposition, ReviewRequest, render_blockquote
+from cricket import Cricket, Disposition, ReviewRequest, render_blockquote, render_chat_turn
 from cricket.cli import main
 from cricket.critic import CRITIC_PROMPT
 
@@ -227,3 +227,35 @@ def test_claim_and_correction_require_identity_fields() -> None:
         assert "replacement" in str(exc)
     else:
         raise AssertionError("correction replacement must be required")
+
+
+def test_chat_turn_pass_emits_candidate_without_cricket_voice() -> None:
+    result = Cricket().review(ReviewRequest(user_message="u", candidate_response="clean"))
+    assert render_chat_turn("clean", result) == "clean"
+
+
+def test_chat_turn_challenge_keeps_candidate_and_surfaces_cricket() -> None:
+    result = Cricket().review(
+        ReviewRequest(
+            user_message="u",
+            candidate_response="Done.",
+            completion_claimed=True,
+        )
+    )
+    rendered = render_chat_turn("Done.", result)
+    assert rendered.startswith("Done.\n\n> **Cricket — CHALLENGE**")
+    assert "Completion claim outruns verification" in rendered
+
+
+def test_chat_turn_block_suppresses_candidate_and_surfaces_only_cricket() -> None:
+    result = Cricket().review(
+        ReviewRequest(
+            user_message="publish",
+            candidate_response="Publishing now.",
+            effect_class="protected",
+            explicit_authorization=False,
+        )
+    )
+    rendered = render_chat_turn("Publishing now.", result)
+    assert rendered.startswith("> **Cricket — BLOCK**")
+    assert "Publishing now." not in rendered
