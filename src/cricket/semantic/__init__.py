@@ -1,7 +1,6 @@
 """Semantic-integrity primitives for Cricket."""
 
 from .analyzer import SemanticIntegrityAnalyzer
-from .behavior import BehavioralHypothesis, BehavioralPattern, HypothesisState
 from .codec import frame_from_dict
 from .extractor import JsonCompletionSemanticExtractor, SEMANTIC_EXTRACTION_PROMPT
 from .scanner import SemanticIntegrityScanner, SemanticPairExtractor, SemanticScanner, findings_from_semantic_report
@@ -20,10 +19,7 @@ from .model import (
 )
 
 __all__ = [
-    "BehavioralHypothesis",
-    "BehavioralPattern",
     "Force",
-    "HypothesisState",
     "JsonCompletionSemanticExtractor",
     "Polarity",
     "ProvenanceKind",
