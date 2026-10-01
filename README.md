@@ -23,9 +23,9 @@ findings are advisory by default.
 
 See docs/RESEARCH.md.
 
-## V0.2
+## V0.3
 
-V0.2 keeps the V0.1 review kernel and adds an executable host-side review cycle. It implements:
+V0.3 keeps the review kernel and bounded host cycle, and adds a self-contained reference runtime simulator. It implements:
 
 - PASS, CHALLENGE, and BLOCK dispositions;
 - silent-on-pass behavior;
@@ -104,10 +104,13 @@ The expected runtime placement is a hook around candidate behavior:
        | BLOCK (host-grounded invariant only)
        +----------> stop + exact reason
 
-## Status boundary
+## Verification and deployment boundary
 
-Repository source is not proof of installation. The intended Vera installation root is D:\VERA; the runtime must be
-fresh-inspected before installation, and the installed path must be exercised before claiming Cricket is active there.
+The package can be built, installed, tested, and integration-qualified directly from this repository. The reference simulator
+proves Cricket's host contract without requiring a Vera deployment.
+
+That is distinct from a deployment-state claim. Saying Cricket is active inside a particular Vera installation still requires
+inspecting and exercising that installation.
 
 ## Bounded runtime loop
 
@@ -159,5 +162,25 @@ The full review envelope—including principles and explicit corrections—is se
     cricket review examples/review.json --principle-pack principles/default.json
     cricket review examples/review.json --receipt-ledger state/cricket.jsonl --json
     cricket verify-ledger state/cricket.jsonl
+    cricket simulate --json
 
 A missing ledger does **not** verify successfully. An existing empty ledger is a valid empty chain; once receipts exist, each row is bound to the preceding receipt digest.
+
+
+## Self-contained reference host
+
+`cricket simulate` runs three deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
+chat renderer, and receipt ledger:
+
+1. clean candidate -> PASS;
+2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
+3. unauthorized protected effect -> BLOCK, with the candidate suppressed.
+
+Run:
+
+    cricket simulate
+    cricket simulate --json
+    cricket simulate --state-dir ./state/cricket-sim --json
+
+The simulation writes a three-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
+model or provider, so it can run deterministically in CI or any installed Python environment.
