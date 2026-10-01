@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cricket-conscience"
-version = "0.3.0"
+version = "0.4.0"
 description = "Provider-neutral simulated conscience and hostile-review layer for AI runtime behavior"
 requires-python = ">=3.11"
 authors = [{name = "Patrick Sims"}]
