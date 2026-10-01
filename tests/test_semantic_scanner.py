@@ -158,3 +158,12 @@ def test_json_semantic_extractor_rejects_malformed_or_unaligned_output() -> None
     source, candidate = unaligned.extract_pair(source_text="a", candidate_text="b")
     report = SemanticIntegrityScanner._compare_frames(source, candidate)
     assert report.material_change is True
+
+
+def test_semantic_extraction_prompt_matches_semantic_frame_contract() -> None:
+    from cricket.semantic import SEMANTIC_EXTRACTION_PROMPT
+
+    prompt = SEMANTIC_EXTRACTION_PROMPT
+    assert "behavioral_hypotheses" not in prompt
+    assert "propositions[]" in prompt
+    assert "unresolved_interpretations[]" in prompt
