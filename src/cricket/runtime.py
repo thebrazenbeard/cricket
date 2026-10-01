@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Protocol
 
 from .models import Disposition, ReviewRequest, ReviewResult
@@ -147,6 +147,7 @@ class ReviewRuntime:
         final_candidate = initial_candidate
         final_result = initial_result
         final_metadata = initial_metadata
+        final_request = initial_request
 
         if revision_attempted:
             feedback = render_blockquote(initial_result, speak_on_pass=True)
@@ -182,6 +183,13 @@ class ReviewRuntime:
                     ),
                     "initial_candidate_digest": canonical_digest(initial_candidate),
                     "final_candidate_digest": canonical_digest(final_candidate),
+                    "initial_request_digest": canonical_digest(asdict(initial_request)),
+                    "final_request_digest": canonical_digest(asdict(final_request)),
+                    "principle_pack": (
+                        {"id": self.principle_pack.id, "version": self.principle_pack.version}
+                        if self.principle_pack is not None
+                        else None
+                    ),
                     "initial_disposition": initial_result.disposition.value,
                     "final_disposition": final_result.disposition.value,
                     "revision_attempted": revision_attempted,
