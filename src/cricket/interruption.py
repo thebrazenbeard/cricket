@@ -94,9 +94,9 @@ class RezonInterruptionComposer:
             "resource_budget": 4,
             "context_refs": finding_ids,
             "persona": {
-                "id": self.persona.name,
+                "id": self.persona.id,
                 "version": self.persona.version,
-                "traits": [trait.value for trait in self.persona.traits],
+                "traits": list(self.persona.traits),
                 "motto": self.persona.motto,
             },
             "context": {
