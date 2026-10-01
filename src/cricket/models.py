@@ -74,6 +74,24 @@ class ReviewRequest:
     def from_dict(cls, raw: dict[str, Any]) -> "ReviewRequest":
         if not isinstance(raw, dict):
             raise ValueError("review request must be an object")
+        allowed = {
+            "user_message",
+            "candidate_response",
+            "phase",
+            "effect_class",
+            "explicit_authorization",
+            "completion_claimed",
+            "verification_evidence",
+            "claims",
+            "corrections",
+            "principles",
+            "metadata",
+        }
+        unknown = set(raw) - allowed
+        if unknown:
+            raise ValueError(
+                "unknown review request fields: " + ", ".join(sorted(unknown))
+            )
         verification = raw.get("verification_evidence", [])
         principles = raw.get("principles", [])
         if not isinstance(verification, list) or not all(isinstance(x, str) for x in verification):
