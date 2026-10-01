@@ -11,8 +11,10 @@ class SequenceGenerator:
     def __init__(self, outputs):
         self.outputs = list(outputs)
         self.calls = 0
+        self.previous_candidates = []
 
-    def generate(self, *, user_message, feedback=None):
+    def generate(self, *, user_message, feedback=None, previous_candidate=None):
+        self.previous_candidates.append(previous_candidate)
         value = self.outputs[self.calls]
         self.calls += 1
         return value
@@ -209,3 +211,13 @@ def test_candidate_metadata_provider_cannot_change_authority() -> None:
         assert "authority" in str(exc).lower()
     else:
         raise AssertionError("candidate metadata must not be able to alter authority")
+
+
+def test_revision_generator_receives_candidate_it_is_revising() -> None:
+    generator = SequenceGenerator(["first candidate", "revised candidate"])
+    runtime = ReviewRuntime(cricket=Cricket(), generator=generator)
+    runtime.run(
+        user_message="fix it",
+        request_metadata={"completion_claimed": True},
+    )
+    assert generator.previous_candidates == [None, "first candidate"]
