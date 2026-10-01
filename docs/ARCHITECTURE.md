@@ -1,75 +1,262 @@
-# Cricket Architecture V0.1
+# Cricket Architecture V0.4
 
 Cricket is a provider-neutral **simulated conscience and hostile-review layer** for AI runtime behavior.
-It is not a second identity, moral oracle, policy authority, or hidden agent. It reviews a concrete candidate
-response/action against explicit evidence and host-supplied boundaries, then emits a distinct blockquoted voice.
 
-## Control loop
+It is not a second sovereign identity, moral oracle, diagnostic engine, or authority source. Cricket inspects a concrete candidate response or action, identifies material defects, and returns a bounded disposition:
 
-    user/context
-        |
-        v
-    candidate response/action
-        |
-        v
-    Cricket review
-        |
-        +--> PASS ------> normal response
-        +--> CHALLENGE -> bounded reconsideration / visible critique
-        +--> BLOCK -----> only host-declared hard invariant
+```text
+PASS
+CHALLENGE
+BLOCK
+```
 
-Cricket separates three jobs:
+The host owns effects and consequences.
 
-1. **Monitoring** — inspect what the system is about to say/do or has just done.
-2. **Critique** — identify a material mismatch, uncertainty, contradiction, authority problem, or evidence problem.
-3. **Control** — decide what consequence follows. Control belongs to the host, not to a model-generated critique.
-
+```text
 CRITIQUE != AUTHORITY
+PERSONALITY != AUTHORITY
+BEHAVIORAL_HYPOTHESIS != HIDDEN_MOTIVE_FACT
+SEMANTIC_SIMILARITY != SAME_PROVENANCE
+REZON_REASONING != AUTHORIZATION
+```
 
-DISAGREEMENT != ERROR
+## V0.4 composition
 
-SEMANTIC_CRITIC_OUTPUT != PROOF
+```text
+source/user context + candidate
+            |
+            v
+  deterministic kernel
+            |
+            +--> semantic integrity lane
+            |       |
+            |       +--> Rezon semantic compatibility baseline
+            |
+            +--> behavioral interpretation lane
+            |       |
+            |       +--> Trek Data Core methodology donor
+            |       +--> Mediaphile pattern-corpus donor
+            |
+            +--> optional semantic critic
+            |
+            v
+       ReviewResult
+      /     |      \
+   PASS  CHALLENGE  BLOCK
+     |       |        |
+     |       |        +--> suppress candidate/effect
+     |       +----------> one bounded revision at most
+     +------------------> emit candidate
+            |
+            v
+  Cricket Persona V1 rendering
+            |
+            +--> optional Rezon-formulated interruption
+            |
+            v
+           host
+```
 
-## Deterministic kernel
+## 1. Deterministic conscience kernel
 
-V0.1 ships with structural rules for defects that can be checked without pretending to understand arbitrary language:
+The deterministic rules cover defects that do not require free-form semantic judgment, including:
 
-- protected effect without explicit authority;
-- completion claim without verification evidence;
-- a claim labeled verified/fact/observed without bound evidence;
-- reassertion of an explicitly superseded correction.
+- protected effects without explicit host authorization;
+- completion claims without verification evidence;
+- verified/fact/observed labels without bound evidence;
+- recurrence of explicitly superseded corrections.
 
-These rules can emit BLOCK only where the review envelope itself supplies the hard boundary.
+Only a host-grounded hard invariant may produce a deterministic `BLOCK`.
 
-## Semantic critic
+## 2. Semantic integrity
 
-Some failures require semantic judgment: proposition substitution, hidden assumptions, contradiction, material omissions,
-or needless corrective pedantry. Hosts may supply a CriticAdapter for this lane.
+The semantic lane asks **what changed in meaning**, not whether two strings look similar.
 
-Semantic critic findings are **advisory by default**. Even if the critic asks for BLOCK, Cricket downgrades that to
-CHALLENGE unless the host explicitly enables semantic_blocking. This prevents an LLM reviewer from silently
-manufacturing new authority.
+It models:
 
-The built-in critic contract names a specific anti-pattern: **"righter" behavior** — strengthening or broadening a user's
-actual proposition, then correcting the invented stronger proposition. Cricket is instructed to critique the literal
-referent actually present and to prefer silence over irrelevant precision.
+- proposition identity;
+- referent;
+- modality/force;
+- polarity;
+- scope;
+- speech act;
+- temporal/currentness state;
+- provenance;
+- unresolved interpretations.
 
-## Chat rendering
+Transformation classes include:
 
-render_blockquote() emits a separate Markdown blockquote voice. PASS is silent by default to avoid turning Cricket into
-a nagging narrator.
+- `STRENGTHENED` / `WEAKENED`;
+- `REFERENT_CHANGED`;
+- `PREDICATE_CHANGED`;
+- `CONTRADICTED`;
+- `SCOPE_BROADENED` / `SCOPE_NARROWED`;
+- `AUTHORITY_ESCALATED`;
+- `CURRENTNESS_PROMOTED`;
+- `PROVENANCE_CHANGED`;
+- `AMBIGUITY_COLLAPSED`;
+- `ADDED` / `DROPPED`.
 
-## Runtime seams
+This is where Cricket mechanically detects the Righter failure. For example:
 
-A host integration needs only a ReviewRequest, Cricket.review(), and render_blockquote(). The host remains responsible for:
+```text
+user: PROBABLE(needs_personality(cricket))
+candidate: ASSERTED(needs_personality(cricket))
 
-- assembling truthful review metadata;
-- determining effect classes and authorization;
-- selecting any semantic critic model/provider;
-- deciding whether a challenge causes revision, user-visible critique, or no action;
-- preserving the user's current corrections and authoritative project state.
+=> STRENGTHENED
+=> CHALLENGE
+```
+
+### Rezon relationship
+
+Rezon is Cricket's **semantic/reasoning upstream**. Cricket V0.4 is pinned to the Rezon compatibility baseline recorded in `cricket.semantic.rezon_contract.REZON_CONTRACT`.
+
+That means Cricket's proposition, referent, scope, modality, provenance, authority, and literal-adversarial-review semantics are intentionally downstream of Rezon.
+
+It does **not** mean:
+
+- `pip install cricket` must install Rezon;
+- Cricket fails when Rezon is offline;
+- Rezon may change Cricket's disposition;
+- Rezon may manufacture authority.
+
+```text
+SEMANTIC_UPSTREAM != MANDATORY_RUNTIME_IMPORT
+```
+
+When the relevant Rezon contract moves, Cricket's compatibility should be reviewed explicitly rather than assumed.
+
+## 3. Behavioral interpretation
+
+Behavioral interpretation is deliberately separate from semantic integrity.
+
+The behavioral lane stores:
+
+```text
+BehavioralObservation
+    -> BehavioralHypothesis
+        -> evidence_refs[]
+        -> alternative_explanations[]
+        -> state
+```
+
+A hypothesis may be `PROPOSED`, `SUPPORTED`, `CONTESTED`, or `REJECTED`.
+
+Rules:
+
+- every hypothesis must bind to explicit observations;
+- a `SUPPORTED` interpretation keeps at least one plausible rival explanation;
+- observed behavior may support an interpretation but does not prove hidden motive;
+- fictional/media pattern examples do not become evidence about a real person;
+- behavioral patterns are not clinical diagnoses;
+- behavioral findings are advisory and may not grant authority.
+
+Trek Data Core supplies the evidence/interpretation discipline. Mediaphile supplies longitudinal pattern vocabulary and contrast cases. Their exact source heads are recorded in `docs/SEMANTIC_LINEAGE.md` and `cricket.behavior.sources`.
+
+## 4. Optional semantic critic
+
+A host may provide a model-backed `CriticAdapter` for failures that require open-ended judgment.
+
+Model-generated critic output is advisory by default. A requested semantic `BLOCK` is downgraded to `CHALLENGE` unless the host explicitly opts into semantic blocking.
+
+The critic is instructed to:
+
+- attack the proposition actually present;
+- avoid Righter substitution;
+- distinguish material errors from pedantry;
+- avoid invented evidence, intent, policy, or hidden state;
+- prefer silence over performative opposition.
+
+## 5. Cricket Persona V1
+
+The canonical runtime persona is `cricket.persona.DEFAULT_CRICKET_PERSONA`.
+
+Human-readable and machine-readable artifacts live under `personality/`.
+
+Core traits:
+
+- absolute candor;
+- dry sass;
+- epistemic suspicion;
+- loyal opposition;
+- self-skepticism;
+- materiality.
+
+The persona changes **formulation**, never epistemic status or authority.
+
+```text
+SASS != EVIDENCE
+CANDOR != CERTAINTY
+```
+
+Deterministic rendering uses the persona to add a concise voice line while preserving the exact structured finding, rationale, evidence, and recommendation.
+
+## 6. Rezon-formulated interruption
+
+Cricket's interruption surface is webhook-shaped even when used in-process.
+
+For CHALLENGE/BLOCK, an optional `RezonInterruptionComposer` may ask a Rezon-compatible reasoner to formulate the visible Cricket message under strict constraints.
+
+Rezon may formulate wording. It may not:
+
+- invent finding IDs;
+- change PASS/CHALLENGE/BLOCK;
+- grant authorization;
+- strengthen evidence;
+- replace the literal proposition.
+
+If Rezon formulation is unavailable or malformed, Cricket falls back to deterministic rendering.
+
+```text
+REZON_UNAVAILABLE != INTERRUPTION_LOST
+```
+
+## 7. Host control and bounded revision
+
+The host decides how to consume Cricket's result.
+
+Default V0.4 policy:
+
+- `PASS`: emit normally; Cricket stays silent.
+- `CHALLENGE`: permit at most one automatic revision.
+- `BLOCK`: stop the candidate/effect; do not let the generator negotiate around the block.
+
+Cricket may be embedded directly or used through `WebhookInterruptionProcessor`.
+
+The webhook-style output is:
+
+```text
+ALLOW
+INJECT_AND_REVISE
+BLOCK_AND_INJECT
+```
+
+## 8. Receipts
+
+Review receipts bind review state into a tamper-evident JSONL hash chain.
+
+Runtime receipts can bind:
+
+- request digest;
+- initial/final candidate digests;
+- initial/final applied review-envelope digests;
+- initial/final dispositions;
+- finding IDs;
+- principle-pack identity;
+- revision state.
+
+Tamper evidence is not external notarization and does not prove an external effect occurred.
 
 ## Non-goals
 
-V0.1 does not claim consciousness, conscience in the human phenomenological sense, moral truth, psychological equivalence,
-or guaranteed error detection. "Conscience" is a functional metaphor for a monitoring-and-challenge role.
+Cricket V0.4 does not claim:
+
+- consciousness;
+- human phenomenological conscience;
+- universal moral truth;
+- psychological diagnosis;
+- hidden-motive access;
+- infallible semantic extraction;
+- that critique proves error;
+- that Rezon is independent corroboration merely because it is a separate repository;
+- that source installation implies deployment in another runtime.
