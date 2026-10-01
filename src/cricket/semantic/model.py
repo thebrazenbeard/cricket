@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from .behavior import BehavioralHypothesis
-
 
 class Force(str, Enum):
     POSSIBLE = "POSSIBLE"
@@ -126,7 +124,6 @@ class SemanticProposition:
 class SemanticFrame:
     propositions: tuple[SemanticProposition, ...] = ()
     unresolved_interpretations: tuple[str, ...] = ()
-    behavioral_hypotheses: tuple[object, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.propositions, tuple) or not all(
@@ -140,10 +137,6 @@ class SemanticFrame:
             isinstance(item, str) and item.strip() for item in self.unresolved_interpretations
         ):
             raise ValueError("unresolved_interpretations must be a tuple of non-empty strings")
-        if not isinstance(self.behavioral_hypotheses, tuple) or not all(
-            isinstance(item, BehavioralHypothesis) for item in self.behavioral_hypotheses
-        ):
-            raise ValueError("behavioral_hypotheses must be a tuple of BehavioralHypothesis objects")
 
 
 @dataclass(frozen=True)
