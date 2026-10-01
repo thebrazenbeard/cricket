@@ -99,16 +99,16 @@ def test_rezon_formulation_must_bind_existing_finding_ids() -> None:
         composer=RezonInterruptionComposer(rezon),
     )
 
-    try:
-        processor.handle({
-            "user_message": "Fix it.",
-            "candidate_response": "Done.",
-            "completion_claimed": True,
-        })
-    except ValueError as exc:
-        assert "finding" in str(exc).lower()
-    else:
-        raise AssertionError("Rezon may not invent finding identity")
+    response = processor.handle({
+        "user_message": "Fix it.",
+        "candidate_response": "Done.",
+        "completion_claimed": True,
+    })
+
+    assert response.action is InterruptionAction.INJECT_AND_REVISE
+    assert response.formulation_source == "cricket-fallback"
+    assert "Completion claim outruns verification" in response.injection_markdown
+    assert "INVENTED.FINDING" not in response.finding_ids
 
 
 def test_rezon_task_preserves_literal_context_and_candor_personality_constraints() -> None:
