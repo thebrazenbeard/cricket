@@ -13,6 +13,7 @@ from .policy import PrinciplePack
 from .receipts import JsonlReceiptLedger, canonical_digest
 from .render import render_blockquote
 from .reviewer import Cricket
+from .simulator import run_reference_simulation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,6 +29,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     verify = sub.add_parser("verify-ledger", help="verify a Cricket JSONL receipt ledger")
     verify.add_argument("ledger")
+
+    simulate = sub.add_parser("simulate", help="run Cricket's self-contained reference host simulation")
+    simulate.add_argument("--state-dir", default=".cricket-sim", help="directory for simulation receipts")
+    simulate.add_argument("--json", action="store_true", help="emit structured JSON")
 
     sub.add_parser("prompt", help="print the semantic critic prompt contract")
     return parser
@@ -56,6 +61,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         valid = JsonlReceiptLedger(args.ledger).verify()
         print(json.dumps({"valid": valid}, sort_keys=True))
         return 0 if valid else 2
+
+    if args.command == "simulate":
+        report = run_reference_simulation(args.state_dir)
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print("Cricket reference simulation")
+            print(f"ledger_valid={report['ledger_valid']} receipt_count={report['receipt_count']}")
+            for name, scenario in report["scenarios"].items():
+                print(
+                    f"{name}: initial={scenario['initial']} "
+                    f"final={scenario['final']} "
+                    f"revision_attempted={scenario['revision_attempted']}"
+                )
+        return 0 if report["ledger_valid"] else 2
 
     request = _load_request(args.request)
     if args.principle_pack:
