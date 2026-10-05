@@ -12,15 +12,15 @@ def read(path: str) -> str:
     return (PLUGIN / path).read_text(encoding="utf-8")
 
 
-def test_chatgpt_projection_manifest_is_high_recall_and_private_plugin_ready() -> None:
+def test_chatgpt_projection_manifest_is_public_submission_ready() -> None:
     manifest = json.loads(read("plugin.json"))
     assert manifest["name"] == "cricket-conscience"
     assert manifest["version"] == "0.4.0"
     description = manifest["description"].casefold()
     assert "ordinary-chat" in description
-    assert "every normal" in description or "always-on" in description
+    assert "response review" in description
     keywords = {item.casefold() for item in manifest["keywords"]}
-    assert {"ordinary-chat", "always-on", "conscience"} <= keywords
+    assert {"ordinary-chat", "review", "conscience"} <= keywords
 
 
 def test_ordinary_chat_default_skill_explicitly_applies_to_every_normal_turn() -> None:
@@ -110,11 +110,14 @@ def test_public_submission_manifest_and_privacy_contract() -> None:
     assert len(interface["shortDescription"]) <= 30
     assert len(interface["longDescription"]) <= 4000
     assert len(interface["developerName"]) <= 80
-    assert interface["category"] == "Productivity"
+    assert interface["category"] == "Developer Tools"
     assert 1 <= len(interface["capabilities"]) <= 20
     assert interface["privacyPolicyURL"].startswith("https://github.com/thebrazenbeard/cricket/")
     assert interface["supportURL"].startswith("https://github.com/thebrazenbeard/cricket/")
     assert "always-on" not in interface["longDescription"].casefold()
+    publication = manifest["extensions"]["com.openai"]["publication"]
+    assert publication["countries"] == []
+    assert "initial public skills-only release" in publication["release_notes"].casefold()
 
     privacy = (ROOT / "PRIVACY.md").read_text(encoding="utf-8").casefold()
     assert "does not operate an external server" in privacy
