@@ -1,53 +1,36 @@
 from __future__ import annotations
 
 from pathlib import Path
-import binascii
 import shutil
 import struct
 import tarfile
 import tempfile
 import zipfile
-import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "integrations" / "chatgpt"
 DIST = ROOT / "dist"
 OUTPUT = DIST / "cricket-chatgpt-plugin.tar.gz"
 PUBLIC_OUTPUT = DIST / "cricket-conscience-public.zip"
+ICON = SOURCE / "assets" / "cricket-256.png"
 
-def _chunk(kind: bytes, payload: bytes) -> bytes:
-    return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", binascii.crc32(kind + payload) & 0xFFFFFFFF)
-
-def _write_icon(path: Path) -> None:
-    width = height = 256
-    rows = []
-    for y in range(height):
-        row = bytearray([0])
-        for x in range(width):
-            # Dark field with a high-contrast C-shaped "conscience" mark and two antenna ticks.
-            bg = (27, 67, 50, 255)
-            dx, dy = x - 128, y - 128
-            r2 = dx * dx + dy * dy
-            ring = 52 * 52 <= r2 <= 83 * 83 and not (x > 137 and 82 < y < 174)
-            antenna = (84 <= x <= 94 and 44 <= y <= 71 and abs((x - 89) - (y - 57) // 3) <= 3) or (162 <= x <= 172 and 44 <= y <= 71 and abs((x - 167) + (y - 57) // 3) <= 3)
-            if ring or antenna:
-                rgba = (245, 240, 220, 255)
-            else:
-                rgba = bg
-            row.extend(rgba)
-        rows.append(bytes(row))
-    raw = b"".join(rows)
-    png = b"\x89PNG\r\n\x1a\n"
-    png += _chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
-    png += _chunk(b"IDAT", zlib.compress(raw, 9))
-    png += _chunk(b"IEND", b"")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(png)
+def _validate_icon(path: Path) -> None:
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise RuntimeError("Cricket plugin icon must be a PNG")
+    if len(data) < 24:
+        raise RuntimeError("Cricket plugin icon is truncated")
+    width, height = struct.unpack(">II", data[16:24])
+    if (width, height) != (256, 256):
+        raise RuntimeError(f"Cricket plugin icon must be 256x256, got {width}x{height}")
 
 def _stage(tmp: str) -> Path:
+    if not ICON.is_file():
+        raise RuntimeError("ChatGPT plugin projection is missing assets/cricket-256.png")
+    _validate_icon(ICON)
     stage = Path(tmp) / "plugin"
     shutil.copytree(SOURCE, stage, ignore=shutil.ignore_patterns("README.md", "CUSTOM_INSTRUCTIONS.md"))
-    _write_icon(stage / "assets" / "cricket-256.png")
+    _validate_icon(stage / "assets" / "cricket-256.png")
     return stage
 
 def build() -> Path:
