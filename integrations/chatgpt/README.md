@@ -1,6 +1,6 @@
 # Cricket ordinary-Chat projection
 
-This directory is the reproducible source for Cricket's private ChatGPT plugin projection.
+This directory is the reproducible source for Cricket's ChatGPT/Codex plugin projection, including private releases and public-directory submission packages.
 
 It exists because ordinary Chat currently does **not** expose the same platform-enforced lifecycle hooks available to ChatGPT Work/Codex. Plugin skill selection is relevance-based and is not a platform guarantee that a skill runs on every ordinary-chat request.
 
@@ -30,4 +30,10 @@ Run:
 python scripts/build_chatgpt_plugin.py
 ```
 
-The output archive can be uploaded as a private ChatGPT plugin release.
+`cricket-chatgpt-plugin.tar.gz` is suitable for private plugin updates. `cricket-conscience-public.zip` is the skills-only public submission package for the OpenAI plugin submission portal.
+
+## Public submission
+
+The public candidate is skills-only: no MCP server, no external backend, and no developer-operated data store. Public listing metadata deliberately avoids claiming host-enforced always-on execution; ordinary Chat skill activation remains relevance-based.
+
+The ZIP includes the primary logo/composer icon required by the directory. Publication metadata removes country restrictions and carries release notes. Skills-only submissions do not require MCP review test cases or a demo recording.
