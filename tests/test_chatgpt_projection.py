@@ -15,7 +15,7 @@ def read(path: str) -> str:
 def test_chatgpt_projection_manifest_is_public_submission_ready() -> None:
     manifest = json.loads(read("plugin.json"))
     assert manifest["name"] == "cricket-conscience"
-    assert manifest["version"] == "0.4.0"
+    assert manifest["version"] == "0.4.1"
     description = manifest["description"].casefold()
     assert "ordinary-chat" in description
     assert "response review" in description
@@ -105,7 +105,7 @@ def test_public_submission_manifest_and_privacy_contract() -> None:
     manifest = json.loads(read("plugin.json"))
     interface = manifest["extensions"]["com.openai"]["interface"]
 
-    assert manifest["version"] == "0.4.0"
+    assert manifest["version"] == "0.4.1"
     assert len(interface["displayName"]) <= 30
     assert len(interface["shortDescription"]) <= 30
     assert len(interface["longDescription"]) <= 4000
