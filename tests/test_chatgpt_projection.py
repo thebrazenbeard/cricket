@@ -99,3 +99,52 @@ def test_plugin_builder_packages_only_plugin_runtime_files(tmp_path, monkeypatch
     assert "skills/ordinary-chat-default/SKILL.md" in names
     assert "README.md" not in names
     assert "CUSTOM_INSTRUCTIONS.md" not in names
+
+
+def test_public_submission_manifest_and_privacy_contract() -> None:
+    manifest = json.loads(read("plugin.json"))
+    interface = manifest["extensions"]["com.openai"]["interface"]
+
+    assert manifest["version"] == "0.4.0"
+    assert len(interface["displayName"]) <= 30
+    assert len(interface["shortDescription"]) <= 30
+    assert len(interface["longDescription"]) <= 4000
+    assert len(interface["developerName"]) <= 80
+    assert interface["category"] == "Productivity"
+    assert 1 <= len(interface["capabilities"]) <= 20
+    assert interface["privacyPolicyURL"].startswith("https://github.com/thebrazenbeard/cricket/")
+    assert interface["supportURL"].startswith("https://github.com/thebrazenbeard/cricket/")
+    assert "always-on" not in interface["longDescription"].casefold()
+
+    privacy = (ROOT / "PRIVACY.md").read_text(encoding="utf-8").casefold()
+    assert "does not operate an external server" in privacy
+    assert "does not independently collect" in privacy
+    assert "retention" in privacy
+    assert "user controls" in privacy
+
+
+def test_public_zip_contains_complete_skills_only_package(tmp_path, monkeypatch) -> None:
+    import importlib.util
+    import zipfile
+
+    script = ROOT / "scripts" / "build_chatgpt_plugin.py"
+    spec = importlib.util.spec_from_file_location("build_chatgpt_plugin_public", script)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    monkeypatch.setattr(module, "DIST", tmp_path)
+    monkeypatch.setattr(module, "OUTPUT", tmp_path / "cricket-chatgpt-plugin.tar.gz")
+    monkeypatch.setattr(module, "PUBLIC_OUTPUT", tmp_path / "cricket-conscience-public.zip")
+
+    built = module.build_public_zip()
+    assert built.name == "cricket-conscience-public.zip"
+    with zipfile.ZipFile(built) as archive:
+        names = set(archive.namelist())
+    assert "plugin.json" in names
+    assert ".codex-plugin/plugin.json" in names
+    assert "skills/cricket/SKILL.md" in names
+    assert "skills/ordinary-chat-default/SKILL.md" in names
+    assert "assets/cricket-256.png" in names
+    assert "README.md" not in names
+    assert "CUSTOM_INSTRUCTIONS.md" not in names
