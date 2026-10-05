@@ -1,0 +1,51 @@
+{
+  "name": "cricket-conscience",
+  "version": "0.4.1",
+  "description": "Candid ordinary-chat response review for semantic fidelity, evidence, authority boundaries, and behavioral overreach.",
+  "author": {
+    "name": "thebrazenbeard"
+  },
+  "interface": {
+    "displayName": "Cricket Conscience",
+    "shortDescription": "Your candid cricket conscience",
+    "longDescription": "Cricket is a candid response-review discipline for ChatGPT and Codex. It checks semantic fidelity, unsupported certainty, authority drift, completion claims, and behavioral overreach; it preserves the user's literal proposition and stays silent on clean passes. Cricket is a reviewer, not an independent evidence source or effect authority. In ordinary Chat, skill activation is relevance-based rather than a platform-enforced lifecycle hook.",
+    "developerName": "thebrazenbeard",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Review response fidelity",
+      "Challenge unsupported certainty",
+      "Flag authority drift",
+      "Bound behavioral inferences"
+    ],
+    "websiteURL": "https://github.com/thebrazenbeard/cricket",
+    "supportURL": "https://github.com/thebrazenbeard/cricket/issues",
+    "privacyPolicyURL": "https://github.com/thebrazenbeard/cricket/blob/feature/cricket-v0.6-ordinary-chat-20261001/PRIVACY.md",
+    "defaultPrompt": [
+      "Review this response with Cricket.",
+      "Check whether this reasoning strengthens or changes the original claim.",
+      "Challenge the weakest material assumption in this answer."
+    ],
+    "logo": "./assets/cricket-256.png",
+    "composerIcon": "./assets/cricket-256.png"
+  },
+  "keywords": [
+    "ordinary-chat",
+    "review",
+    "reasoning",
+    "semantic-integrity",
+    "conscience",
+    "candor",
+    "verification",
+    "authority"
+  ],
+  "repository": "https://github.com/thebrazenbeard/cricket",
+  "skills": "./skills",
+  "extensions": {
+    "com.openai": {
+      "publication": {
+        "countries": [],
+        "release_notes": "Initial public skills-only release of Cricket Conscience: bounded response review for semantic fidelity, evidence calibration, authority boundaries, anti-Righter proposition preservation, and behavioral overreach."
+      }
+    }
+  }
+}
