@@ -28,3 +28,9 @@ jobs:
           name: cricket-chatgpt-plugin
           path: dist/cricket-chatgpt-plugin.tar.gz
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cricket-public-plugin
+          path: dist/cricket-conscience-public.zip
+          if-no-files-found: error
