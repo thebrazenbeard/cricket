@@ -1,270 +1,91 @@
-# Cricket
+# Cricket — AI response and action-review hook
 
-Cricket is a provider-neutral **simulated conscience and hostile reviewer for AI runtime behavior**. It watches a candidate
-response or action, challenges material defects, and renders its own voice as a Markdown blockquote so the review remains
-visibly distinct from the main chat.
+Cricket is a **provider-neutral Python package and CLI** for reviewing proposed AI responses and actions before a host emits or executes them. It combines deterministic checks with an optional semantic critic, preserves disagreements as review findings, and can render interventions as clearly attributed Markdown blockquotes.
 
-The name is inspired by Jiminy Cricket's narrative role as a conscience at Pinocchio's shoulder. This project does not copy
-the character, artwork, dialogue, or claim to be a literal conscience.
+Use it to add a bounded review step to an application, test review policies offline, or inspect compatibility assumptions against upstream projects. Cricket does **not** execute protected actions, authenticate providers, issue consent, or replace a host's authorization service.
 
-## The important part
+## Capabilities
 
-Cricket is deliberately **not another authority layer pretending that critique equals truth**.
+| Surface | What is implemented | Important boundary |
+| --- | --- | --- |
+| `Cricket().review(...)` | Deterministic `PASS`, `CHALLENGE`, or `BLOCK` findings for structured requests | The host must truthfully classify effects and supply authorization/evidence fields |
+| Semantic review | Typed proposition, referent, modality, scope, provenance, and correction checks; optional completion-client critic | Model-generated critique is advisory; semantic `BLOCK` is downgraded by default |
+| Behavioral interpretation | Evidence-linked hypotheses and rival explanations | Not a diagnosis or proof of anyone's motives |
+| `ReviewRuntime` | Initial review, at most one candidate revision, then final review | `BLOCK` never triggers an automatic retry |
+| `cricket simulate` | Five deterministic host-contract scenarios and a receipt ledger | A reference simulation, not proof of deployed integration |
+| JSONL receipts | SHA-256-linked append/verification of local review entries | Tamper-evident is not tamper-proof or an externally trusted audit service |
+| `cricket upstreams` | Compare host-supplied Git commit observations with pinned compatibility baselines | No network fetch; `MOVED` requires re-review, not proof of incompatibility |
 
-    MONITORING != AUTHORITY
-    CRITIQUE != VERIFICATION
-    DISAGREEMENT != ERROR
-    MODEL SELF-CRITIQUE != INDEPENDENT EVIDENCE
+The repository contains JSON schemas under [`schemas/`](schemas/review-request.schema.json), principle packs under [`principles/`](principles/default.json), and a sample host adapter in [`examples/host_runtime.py`](examples/host_runtime.py).
 
-Research on human metacognition supports separating error/conflict monitoring from downstream control. AI critique research
-shows that critiques can improve error detection, while broader self-correction research warns that an LLM's own feedback is
-not automatically reliable. Cricket therefore has a deterministic structural kernel plus an optional semantic critic whose
-findings are advisory by default.
+## Install and try it
 
-See docs/RESEARCH.md.
-
-## V0.5 — Upstream compatibility currentness
-
-V0.5 begins the post-reconciliation expansion line by making Cricket's upstream relationships observable instead of merely documented.
-
-`cricket upstreams` evaluates host-supplied live repository heads against Cricket's pinned compatibility contracts.
-
-Statuses:
-
-```text
-CURRENT  = observed head exactly matches the pinned compatibility baseline
-MOVED    = upstream head changed; Cricket's compatibility claim is stale pending review
-UNKNOWN  = no current observation was supplied
-```
-
-`MOVED` does **not** mean the upstream is incompatible. It means prior compatibility evidence is now historical and must be re-evaluated against the new exact head.
-
-Cricket itself performs no network access for this check. A host, GitHub connector, CI job, or other observer supplies the live heads.
-
-Example:
+Requires **Python 3.11+**. From a checkout:
 
 ```bash
-cricket upstreams --observed live-heads.json --json
+python -m venv .venv
+python -m pip install -e ".[dev]"
+python -m pytest
 ```
 
-Exit codes are `0=CURRENT`, `1=UNKNOWN`, and `2=MOVED`.
+Inspect an example review request:
 
-The registry currently covers Rezon plus the semantic and behavioral donor baselines recorded in `docs/SEMANTIC_LINEAGE.md`.
-
-## V0.4 — Semantic integrity, behavioral interpretation, and Cricket Persona V1
-
-V0.4 extends the review kernel with typed semantic integrity, a separate evidence-bound behavioral interpretation lane, Cricket Persona V1, and a webhook-shaped interruption surface. Rezon is the semantic/reasoning upstream and may optionally formulate Cricket’s visible intervention. It implements:
-
-- PASS, CHALLENGE, and BLOCK dispositions;
-- silent-on-pass behavior;
-- blockquoted chat rendering;
-- deterministic checks for:
-  - protected effects without explicit host authorization;
-  - completion claims without verification evidence;
-  - claims labeled verified/fact/observed without bound evidence;
-  - recurrence of an explicitly superseded user correction;
-- an optional semantic critic adapter;
-- forced downgrade of model-generated BLOCK to CHALLENGE unless the host explicitly opts into semantic blocking;
-- a semantic-review contract that explicitly detects **"righter" behavior**: silently strengthening a proposition and then
-  correcting the stronger proposition the user never made;
-- JSON request/result schemas;
-- CLI and Python API;
-- deterministic tests and CI;
-- a runtime integration contract for Vera;
-- versioned principle packs that augment, rather than replace, request-local principles;
-- a bounded `ReviewRuntime`: generate -> review -> at most one revision -> review;
-- tamper-evident JSONL review receipts linked by SHA-256 hash chain;
-- refusal to append new receipts when the existing ledger does not verify;
-- typed semantic frames for proposition, referent, modality, polarity, scope, speech act, currentness, and provenance;
-- semantic transformation classes including strengthening/weakening, referent drift, scope change, authority escalation, contradiction, currentness promotion, and provenance change;
-- explicit ambiguity preservation instead of forced interpretation;
-- evidence-bound behavioral hypotheses informed by Trek Data Core and Mediaphile methods;
-- Cricket Persona V1: absolute candor, dry sass, loyal opposition, self-skepticism, and materiality;
-- Rezon as Cricket's semantic/reasoning upstream for proposition fidelity, with optional interruption formulation;
-- webhook-style `ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT` responses;
-- deterministic Cricket fallback if Rezon formulation is unavailable or malformed.
-
-## Example
-
-Given a host-classified protected effect with no explicit authorization, Cricket renders:
-
-> **Cricket — BLOCK**
->
-> **[BLOCK] Protected effect lacks explicit authority**
-> The host classified the proposed behavior as a protected effect, but the review request contains no explicit authorization for that effect.
-> Evidence: effect_class=protected; explicit_authorization=false
-> Recommendation: Obtain exact authority or remove the protected effect.
-
-## Install for development
-
-    python -m venv .venv
-    python -m pip install -e ".[dev]"
-    pytest
-
-CLI:
-
-    cricket review examples/review.json
-    cricket review examples/review.json --json
-    cricket prompt
-
-Exit codes are 0=PASS, 1=CHALLENGE, 2=BLOCK.
-
-Python:
-
-    from cricket import Cricket, ReviewRequest, ReviewRuntime, render_blockquote
-
-    request = ReviewRequest(
-        user_message="Tell me when it is verified.",
-        candidate_response="It is done.",
-        completion_claimed=True,
-    )
-    result = Cricket().review(request)
-    print(render_blockquote(result))
-
-## Architecture
-
-Read docs/ARCHITECTURE.md and docs/RUNTIME_INTEGRATION.md.
-
-The expected runtime placement is a hook around candidate behavior:
-
-    candidate
-       |
-       v
-    Cricket review
-       | PASS
-       +----------> emit
-       |
-       | CHALLENGE
-       +----------> one bounded reconsideration / visible critique
-       |
-       | BLOCK (host-grounded invariant only)
-       +----------> stop + exact reason
-
-## Verification and deployment boundary
-
-The package can be built, installed, tested, and integration-qualified directly from this repository. The reference simulator
-proves Cricket's host contract without requiring a Vera deployment.
-
-That is distinct from a deployment-state claim. Saying Cricket is active inside a particular Vera installation still requires
-inspecting and exercising that installation.
-
-## Bounded runtime loop
-
-Cricket can now sit around a host generator without creating an unbounded self-critique loop:
-
-    initial candidate
-         |
-         v
-      review
-      / | \
-   PASS CHALLENGE BLOCK
-    |      |        |
-   emit    |       stop
-           v
-     revise once
-           |
-           v
-       review again
-           |
-           v
-    return final state
-
-A `BLOCK` is never used as feedback for an automatic retry. A model may not negotiate around a host-grounded hard invariant.
-
-Principle packs live under `principles/`. The default pack is versioned and injected into the review envelope without overwriting request-local principles.
-
-`JsonlReceiptLedger` records review-cycle evidence in a single-writer append-only JSONL chain. Each row binds to the previous row digest. The ledger refuses further appends if prior rows no longer verify.
-
-## Semantic critic adapter
-
-`cricket.adapters.JsonCompletionCritic` adapts any host-supplied completion client with this minimal interface:
-
-    complete(system: str, user: str) -> str
-
-The completion must return a strict JSON array of Cricket finding objects. Malformed JSON, non-array output, and non-object entries fail closed. Cricket does not strip code fences or guess at malformed reviewer output.
-
-Example:
-
-    from cricket import Cricket
-    from cricket.adapters import JsonCompletionCritic
-
-    critic = JsonCompletionCritic(my_completion_client)
-    cricket = Cricket(critic=critic)
-
-The full review envelope—including principles and explicit corrections—is serialized into the critic request. Semantic `BLOCK` remains downgraded to `CHALLENGE` unless the host deliberately opts into semantic blocking.
-
-## CLI policy and receipts
-
-    cricket review examples/review.json --principle-pack principles/default.json
-    cricket review examples/review.json --receipt-ledger state/cricket.jsonl --json
-    cricket verify-ledger state/cricket.jsonl
-    cricket simulate --json
-
-A missing ledger does **not** verify successfully. An existing empty ledger is a valid empty chain; once receipts exist, each row is bound to the preceding receipt digest.
-
-
-## Self-contained reference host
-
-`cricket simulate` runs five deterministic end-to-end scenarios through the real `ReviewRuntime`, principle pack,
-semantic scanner, chat renderer, and receipt ledger:
-
-1. clean candidate -> PASS;
-2. unverified completion claim -> CHALLENGE -> one revision -> PASS;
-3. unauthorized protected effect -> BLOCK, with the candidate suppressed;
-4. Righter modality drift (`probably` -> asserted) -> CHALLENGE -> one revision -> PASS;
-5. unsupported motive certainty -> behavioral CHALLENGE -> one revision with a live rival explanation -> PASS.
-
-Run:
-
-    cricket simulate
-    cricket simulate --json
-    cricket simulate --state-dir ./state/cricket-sim --json
-
-The simulation writes a five-receipt tamper-evident ledger and verifies it before reporting success. It uses no external
-model or provider, so it can run deterministically in CI or any installed Python environment.
-
-
-## Semantic integrity
-
-Cricket does not reduce meaning preservation to a single similarity score. The semantic layer tracks typed changes in proposition/referent, modality, polarity, scope, speech act, currentness, provenance, and unresolved interpretations.
-
-This is where Cricket catches the Righter failure mechanically: a user's `PROBABLE` proposition becoming an `ASSERTED` proposition is `STRENGTHENED`, not a harmless paraphrase.
-
-See `docs/SEMANTIC_LINEAGE.md`.
-
-## Behavioral interpretation
-
-Behavioral interpretation is intentionally separate from semantic integrity.
-
-Cricket can bind observations to hypotheses such as motivated reasoning, rationalization, status defense, grievance escalation, dependency engineering, relational bids, or identity protection. A hypothesis must cite explicit observations. A `SUPPORTED` hypothesis without a plausible rival explanation is challenged rather than treated as settled motive.
-
-Trek Data Core supplies the evidence/interpretation discipline. Mediaphile supplies longitudinal pattern vocabulary and contrast cases. Neither is evidence about a real person's hidden motives.
-
-```text
-OBSERVED_BEHAVIOR != HIDDEN_MOTIVE_FACT
-PATTERN_SIMILARITY != DIAGNOSIS
+```bash
+cricket review examples/review.json --json
 ```
 
-## Optional Rezon-formulated interruption injection
+The supplied example is deliberately an **unauthorized protected effect**. It reports `BLOCK` and exits with code `2`; that nonzero exit is an expected policy result, not a failed installation.
 
-Cricket is webhook-shaped even when embedded in-process:
+Run the self-contained host simulation:
 
-```text
-candidate
-   |
-   v
-Cricket detects material defect
-   |
-   +--> deterministic Cricket persona rendering
-   |
-   +--> optional Rezon formulation under Cricket constraints
-   |
-   v
-host receives ALLOW / INJECT_AND_REVISE / BLOCK_AND_INJECT
+```bash
+cricket simulate --state-dir ./cricket-sim --json
+cricket verify-ledger ./cricket-sim/cricket-reference-receipts.jsonl
 ```
 
-Cricket owns the finding and disposition. When configured, Rezon may formulate the reasoned wording. The host owns injection and effects.
+The simulation produces five review receipts and verifies its own chain. Use a writable state directory; treat the files as local test evidence, not an authority grant.
 
-Rezon cannot grant authority, invent finding IDs, or downgrade a Cricket block. If Rezon formulation fails validation, Cricket falls back to its deterministic renderer and the interruption is preserved.
+Python integration:
 
-See `docs/WEBHOOK_INJECTION.md` and `personality/CRICKET_PERSONA.md`.
+```python
+from cricket import Cricket, ReviewRequest, render_blockquote
+
+request = ReviewRequest(
+    user_message="Tell me when the operation is verified.",
+    candidate_response="It is complete.",
+    completion_claimed=True,
+)
+result = Cricket().review(request)
+print(result.disposition.value)
+print(render_blockquote(result))
+```
+
+See [`docs/RUNTIME_INTEGRATION.md`](docs/RUNTIME_INTEGRATION.md) for the structured host contract. The host retains effect execution, independently verified authorization, and the final decision on how to use review findings.
+
+### Command reference
+
+```bash
+cricket review examples/review.json --principle-pack principles/default.json --json
+cricket review examples/review.json --receipt-ledger ./review-receipts.jsonl
+cricket verify-ledger ./review-receipts.jsonl
+cricket prompt
+cricket upstreams --observed ./observed-heads.json --json
+```
+
+For `review`, exit codes are `0=PASS`, `1=CHALLENGE`, `2=BLOCK`. For `upstreams`, they are `0=CURRENT`, `1=UNKNOWN`, `2=MOVED`. Supply `observed-heads.json` as a JSON mapping from repository names to Git commit IDs collected by your own trusted observer; a missing observation remains `UNKNOWN`.
+
+## Where Cricket belongs
+
+An application can call Cricket at the **pre-send/pre-effect** boundary and optionally after a response. Host-supplied fields, not the model's assertions, determine protected effect classification and the authorization evidence available to the deterministic rules. An optional completion client can formulate a critique, but cannot mint permissions or override a host-grounded block.
+
+The named **Cricket persona** is a presentation style (candor, concise loyal opposition, and occasional dry humor), not a separate legal principal or proof of independent consciousness. The repository borrows the *narrative analogy* of a conscience without copying the fictional character or its material. See [`personality/CRICKET_PERSONA.md`](personality/CRICKET_PERSONA.md).
+
+## Evidence and limits
+
+- Structural rules and passing tests demonstrate the implemented review behavior on covered cases. They do not establish factual truth, general AI reliability, provider identity, verified human consent, or operational host enforcement.
+- Semantic and behavioral hypotheses are explicitly uncertain. An LLM's disagreement is not independent verification or evidence of the user's hidden motives.
+- Upstream compatibility status is bound to the pinned and observed Git commits; a source change makes prior qualification historical. See [`docs/UPSTREAM_CURRENTNESS.md`](docs/UPSTREAM_CURRENTNESS.md).
+- The historical editor-startup loader was removed by a source-security repair; it must not be treated as an authorized installation mechanism.
+- There is **no root `LICENSE` or `COPYING` file in this checkout**. Public source visibility alone does not grant permission for redistribution or commercial reuse; obtain the copyright holder's terms before those uses.
+
+For threat boundaries, research rationale, and integration details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/RESEARCH.md`](docs/RESEARCH.md), and [`docs/WEBHOOK_INJECTION.md`](docs/WEBHOOK_INJECTION.md).
