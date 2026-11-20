@@ -268,3 +268,9 @@ Cricket owns the finding and disposition. When configured, Rezon may formulate t
 Rezon cannot grant authority, invent finding IDs, or downgrade a Cricket block. If Rezon formulation fails validation, Cricket falls back to its deterministic renderer and the interruption is preserved.
 
 See `docs/WEBHOOK_INJECTION.md` and `personality/CRICKET_PERSONA.md`.
+
+## Editor startup containment — tracked source (2026-11-20)
+
+The tracked `main` source formerly contained a concealed VS Code `folderOpen` task invoking obfuscated `.vscode/ini` through Node. The task list is now empty, `task.allowAutomaticTasks` is explicitly `"off"`, and the obfuscated file is removed from this source tree. Historical Git source remains for investigation.
+
+**Limits:** This is source-only containment, not proof that older checkouts, editor extensions, user/global settings, local credentials, or any previous host execution are safe. Do not execute historical suspect assets.
