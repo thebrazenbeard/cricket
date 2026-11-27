@@ -12,6 +12,15 @@ class EditorTaskGuardTests(unittest.TestCase):
     def test_disguised_node_loader_is_absent(self):
         self.assertFalse((ROOT / "public" / "fonts" / "fa-solid.lkf").exists())
 
+    def test_no_held_editor_startup_paths(self):
+        for relative in (".vscode/ini", ".vscode/inq"):
+            with self.subTest(path=relative):
+                try:
+                    (ROOT / relative).lstat()
+                except FileNotFoundError:
+                    continue
+                self.fail("held editor startup path must not be present")
+
     def test_no_automatic_editor_tasks(self):
         config = json.loads((ROOT / ".vscode" / "tasks.json").read_text(encoding="utf-8"))
         for task in config.get("tasks", []):
