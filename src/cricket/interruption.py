@@ -143,11 +143,14 @@ class RezonInterruptionComposer:
                 + ", ".join(sorted(invented))
             )
 
-        return message.strip(), tuple(finding_ids), tuple(unresolved)
+        if len(finding_ids) != len(set(finding_ids)) or set(finding_ids) != allowed:
+            raise ValueError("Rezon formulation must cover every distinct finding exactly once")
+
+        return message.strip(), tuple(finding.rule_id for finding in result.findings), tuple(unresolved)
 
 
-def _render_injection(disposition: Disposition, message: str) -> str:
-    lines = [f"> **Cricket — {disposition.value}**", ">"]
+def _render_advisory(message: str) -> str:
+    lines = [">", "> **Advisory formulation (unverified; does not change findings):**"]
     for line in message.splitlines() or [""]:
         lines.append(f"> {line}")
     return "\n".join(lines)
@@ -182,7 +185,8 @@ class WebhookInterruptionProcessor:
             else InterruptionAction.INJECT_AND_REVISE
         )
 
-        if self.composer is not None:
+        # An authoritative block must not depend on an advisory reasoner.
+        if self.composer is not None and result.disposition is Disposition.CHALLENGE:
             try:
                 message, finding_ids, unresolved = self.composer.compose(
                     request=request,
@@ -191,12 +195,15 @@ class WebhookInterruptionProcessor:
                 return InterruptionResponse(
                     action=action,
                     disposition=result.disposition.value,
-                    injection_markdown=_render_injection(result.disposition, message),
+                    injection_markdown=(
+                        render_blockquote(result, speak_on_pass=True)
+                        + "\n" + _render_advisory(message)
+                    ),
                     finding_ids=finding_ids,
                     unresolved=unresolved,
                     formulation_source="rezon",
                 )
-            except (ValueError, TypeError, RuntimeError):
+            except (ValueError, TypeError, RuntimeError, OSError):
                 # Rezon formulation is advisory. Preserve Cricket's deterministic
                 # interruption if the reasoner is unavailable or malformed.
                 pass
